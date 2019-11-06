@@ -1,10 +1,10 @@
 <?php
 
-namespace Laralib\L5scaffold\Migrations;
+namespace Akat03\Scaffoldplus\Migrations;
 
 /**
  * Class SchemaParser with modifications by Fernando
- * @package Laralib\L5scaffold\Migrations
+ * @package Akat03\Scaffoldplus\Migrations
  * @author Jeffrey Way <jeffrey@jeffrey-way.com>
  */
 class SchemaParser

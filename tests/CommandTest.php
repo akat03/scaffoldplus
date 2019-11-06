@@ -1,6 +1,6 @@
 <?php
 
-namespace Laralib\L5scaffold\Tests;
+namespace Akat03\Scaffoldplus\Tests;
 
 use PHPUnit_Framework_TestCase as PHPUnit;
 
@@ -19,7 +19,7 @@ class CommandTest extends PHPUnit
 	public function setUp()
 	{
 		parent::setUp();
-		
+
 		$this->prepareFolderStructure();
 
 		$this->createApplication();
@@ -35,8 +35,8 @@ class CommandTest extends PHPUnit
 	public function createApplication()
 	{
 		$this->app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
-		
-		$this->app->register('Laralib\L5scaffold\GeneratorsServiceProvider');
+
+		$this->app->register('Akat03\Scaffoldplus\GeneratorsServiceProvider');
 
         $this->app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 	}
@@ -45,10 +45,10 @@ class CommandTest extends PHPUnit
 	{
 		$this->filesystem = new Filesystem();
 
-		 $this->folders = 
+		 $this->folders =
 		[
-			'app/Http/Controllers', 
-			'database/seeds', 
+			'app/Http/Controllers',
+			'database/seeds',
 			'database/migrations',
 			'resources/views'
 		];
@@ -64,7 +64,7 @@ class CommandTest extends PHPUnit
 
 	public function unmontFolderStructure()
 	{
-		foreach ($this->folders as $folder) 
+		foreach ($this->folders as $folder)
 		{
 			$this->filesystem->deleteDirectory(explode("/", $folder)[0]);
 		}
@@ -72,9 +72,9 @@ class CommandTest extends PHPUnit
 
 	public function testExecuteCommand()
 	{
-        Artisan::call('make:scaffold', 
+        Artisan::call('make:scaffold',
 		[
-        	'name' => 'Tweet', 
+        	'name' => 'Tweet',
         	'--schema' => 'title:string',
 			'--validator' => 'title:required|unique:tweets,id',
         	'--no-interaction'

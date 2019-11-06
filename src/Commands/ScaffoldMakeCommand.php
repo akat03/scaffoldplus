@@ -1,18 +1,18 @@
 <?php
 
-namespace Laralib\L5scaffold\Commands;
+namespace Akat03\Scaffoldplus\Commands;
 
 use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
-use Laralib\L5scaffold\Makes\MakeController;
-use Laralib\L5scaffold\Makes\MakeLayout;
-use Laralib\L5scaffold\Makes\MakeMigration;
-use Laralib\L5scaffold\Makes\MakeModel;
-use Laralib\L5scaffold\Makes\MakerTrait;
-use Laralib\L5scaffold\Makes\MakeSeed;
-use Laralib\L5scaffold\Makes\MakeView;
+use Akat03\Scaffoldplus\Makes\MakeController;
+use Akat03\Scaffoldplus\Makes\MakeLayout;
+use Akat03\Scaffoldplus\Makes\MakeMigration;
+use Akat03\Scaffoldplus\Makes\MakeModel;
+use Akat03\Scaffoldplus\Makes\MakerTrait;
+use Akat03\Scaffoldplus\Makes\MakeSeed;
+use Akat03\Scaffoldplus\Makes\MakeView;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 

@@ -6,13 +6,13 @@
  * Time: 5:00 PM
  */
 
-namespace Laralib\L5scaffold\Makes;
+namespace Akat03\Scaffoldplus\Makes;
 
 
 
 
 use Illuminate\Filesystem\Filesystem;
-use Laralib\L5scaffold\Commands\ScaffoldMakeCommand;
+use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 
 trait MakerTrait {
 

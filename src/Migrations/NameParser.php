@@ -1,10 +1,10 @@
 <?php
 
-namespace Laralib\L5scaffold\Migrations;
+namespace Akat03\Scaffoldplus\Migrations;
 
 /**
  * Class NameParser
- * @package Laralib\L5scaffold\Migrations with modifications by Fernando
+ * @package Akat03\Scaffoldplus\Migrations with modifications by Fernando
  * @author Jeffrey Way <jeffrey@jeffrey-way.com>
  */
 class NameParser
