@@ -62,7 +62,7 @@ class MakeController
      */
     protected function compileControllerStub()
     {
-        $stub = $this->files->get(__DIR__ . '/../stubs/controller.stub');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/controller.stub');
 
         $this->replaceClassName($stub, "controller")
             ->replaceModelPath($stub)
