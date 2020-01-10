@@ -1,0 +1,115 @@
+@extends('layout')
+
+@section('css')
+@endsection
+
+
+@section('content')
+
+@if( Route::currentRouteName() == '{{class}}.edit' )
+<form action="{{ route('{{class}}.update', ${{classSingle}}->id) }}" method="POST">
+@method('put')
+@else
+<form action="{{ route('{{class}}.store') }}" method="POST">
+@endif
+
+@csrf
+<input type="hidden" name="_back_uri" value="{{ $_back_uri }}">
+
+
+<style type="text/css">
+.crud_table tr td:nth-of-type(1){
+    width: 25%;
+}
+.crud_table tr td:nth-of-type(3){
+    font-size: smaller;
+    color:#777;
+    width: 25%;
+}
+</style>
+
+<article>
+    <!-- card -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0"><i class="fa fa-suitcase"></i> {{Class}}
+            @if( Route::currentRouteName() == '{{class}}.edit')
+            Edit
+            @else
+            Create
+            @endif
+            </h2>
+        </div>
+        <div class="card-body">
+
+<table class="crud_table table table-striped table-bordered table-condensed">
+<thead></thead>
+<tbody>
+            @foreach ( $crud_config->table_desc as $k => $v)
+            @if ( ! isset($v->view_edit_flag) )<?php $v->view_edit_flag = 0; ?> @endif
+            @if ( ! isset($v->view_list_title) )<?php $v->view_list_title = null; ?> @endif
+            @if ( ! isset($v->input_type) )<?php   $v->input_type = 'text'; ?> @endif
+            @if ( ! isset($v->comment) )<?php   $v->comment = null; ?> @endif
+
+
+            @if ( $v->view_edit_flag == 1 )
+                <tr>
+                    <td>
+                        {{ $v->view_list_title }}
+                        @if ( $crud_config->view_column_name_in_edit == 1 )
+                            <span class="column_name">( {{ $v->name }} )</span>
+                        @endif
+                    </td>
+
+                    <td>
+                @if ( $v->editable_flag != 1 )
+                    {{ ${{classSingle}}[$k] }}
+                @else
+                    @if ( strcmp($v->input_type, 'text') == 0 ) {{ Form::text($k, ${{classSingle}}[$k], ['class' => 'form-control']) }}
+                    @elseif ( strcmp($v->input_type, 'textarea') == 0 ) {{ Form::textarea($k, ${{classSingle}}[$k], ['class' => 'form-control']) }}
+                    @elseif ( strcmp($v->input_type, 'select') == 0 ) {{ Form::select($k, ${{classSingle}}[$k], ['class' => 'form-control']) }}
+                    @elseif ( strcmp($v->input_type, 'checkbox') == 0 ) {{ Form::checkbox($k, ${{classSingle}}[$k], ['class' => 'form-control']) }}
+                    @elseif ( strcmp($v->input_type, 'radio') == 0 ) {{ Form::radio($k, ${{classSingle}}[$k], ['class' => 'form-control']) }}
+                    @endif
+                @endif
+
+                {{-- Error Message --}}
+                @if($errors->has($k))
+                <span class="help-block text-danger">{{ $errors->first($k) }}</span>
+                @endif
+
+                    </td>
+                    <td>{!! $v->comment !!}</td>
+                </tr>
+            @endif
+            @endforeach
+
+</tbody>
+</table>
+
+
+<button type="submit" class="btn btn-success">登録する</button><br>
+<a class="btn mt15" href="@if($_back_uri){{ $_back_uri }}@elseif(url()->previous()){{ url()->previous() }}@else{{ route('{{class}}.index') }}@endif">戻る</a>
+
+
+    </div>
+
+    </div>
+    <!-- card -->
+</article>
+
+
+</form>
+
+@if(env('APP_DEBUG') == 1)
+    @php($template_filename = '{{prefix}}{{class}}/show.blade.php')
+    @php($compiled_template_filename = __FILE__)
+@endif
+
+@endsection
+
+@section('scripts')
+@endsection
+
+
+

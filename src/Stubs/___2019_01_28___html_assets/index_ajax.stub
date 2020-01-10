@@ -1,0 +1,440 @@
+@extends('layout')
+
+@section('html_head_add')
+@endsection
+
+
+@section('content')
+
+<style type="text/css">
+.VueTables__table th {
+    font-size: smaller;
+}
+.VueTables__table th:last-of-type {
+    width: 188px;
+}
+.VueTables__sort-icon {
+    line-height: 1.6;
+}
+.VueTables__sort-icon.fa-sort {
+    opacity: .45;
+}
+
+</style>
+
+<article>
+
+    <!-- card -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="h6 mb-0"><i class="fa fa-suitcase"></i> クライアント一覧</h2>
+            <a href="#" onclick="data_create('{{class}}'); return false;" class="btn btn-sm btn-default"><i class="fa fa-edit"></i> 新規クライアント作成</a>
+        </div>
+
+    <div class="card-body">
+
+        <div id="app">
+        <v-client-table :columns="columns" :data="data" :options="options" :mydata="mydata" ref="table">
+
+        <ul slot="projects_loop" slot-scope="props"  v-bind:href="'tel:' + props.row.projects_loop">
+            <li v-for="v in props.row.projects_loop"><a v-bind:href="'/projects/'+v.uuid_name">(% v.project_name %)</a></li>
+        </ul>
+
+        <a slot="tel" slot-scope="props"  v-bind:href="'tel:' + props.row.tel">(%props.row.tel%)</a>
+
+        <ul slot="tanto_loop" slot-scope="props"  v-bind:href="'tel:' + props.row.tanto_loop">
+            <li v-for="v in props.row.tanto_loop">
+                <span>(% v.tanto_name %)</span>
+                <span class="ml20">(% v.tel_name %)</span>
+                <span class="ml20">(% v.email_name %)</span>
+            </li>
+        </ul>
+
+        <div slot="EDIT" slot-scope="props">
+        <button v-on:click="rowView(props.row.id)" type="button" class="btn btn-sm btn-primary">表示</button>
+        <button v-on:click="rowEdit(props.row.id)" type="button" class="btn btn-sm btn-success">編集</button>
+        <button v-on:click="rowDelete(props.row, props.row.id)" type="button" class="btn btn-sm btn-danger">削除</button>
+        {{-- <button v-on:click="rowDelete(props.row.id, props.row.id)" type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modalConfirmDelete" data-title="あいうえお">削除</button> --}}
+        </div>
+        </v-client-table>
+        </div>
+
+
+    </div>
+
+    </div>
+    <!-- card -->
+
+    <div id="result"></div><!-- 削除結果通知エリア -->
+
+
+</article>
+
+
+
+<script>
+
+function data_create( db_table_name ){
+    // alert(location.href);
+    var _back_uri = encodeURIComponent(location.href);
+    location.href = '/' + db_table_name + '/create' + '?_back_uri=' + _back_uri ;
+}
+
+// Vue.use(VueTables.ClientTable, {}, true);
+
+Vue.config.delimiters = ['(%', '%)'];
+
+Vue.use(VueTables.ClientTable, {
+    preserveState :true ,
+});
+
+Vue.use(VueRouter);
+// URL 例
+// #/search?q=会社&page=1 「会社」で検索した 「1」ページ目を表示
+// #/search?q=会社            「会社」で検索した 「1」ページ目を表示
+// #/search?page=4                          「4」ページ目を表示
+
+var router = new VueRouter({
+    // mode  : 'history' ,  // # をつけない。 mod_rewrite必須
+    routes: [
+        {
+            path     : '/search' ,
+            name     : 'search' ,
+            query    : { q:'dummy' } ,
+            component: {}
+        } ,
+    ]
+});
+
+
+
+var vm = new Vue({
+    delimiters : ['(%', '%)'] ,
+    name  : "ChildRow" ,
+    el    : "#app",
+    router: router ,
+    data  : {
+        mydata: {
+            table_name: '{{classSingle}}'
+        },
+        columns: [
+            @foreach ($crud_config->table_desc as $v)
+                @if ($v->view_list_flag == 1)
+                '{{ $v->name }}' ,
+                @endif
+            @endforeach
+            'EDIT'
+        ],
+        data: getData(),
+        options: {
+            headings: {
+                @foreach ($crud_config->table_desc as $v)
+                    @if ($v->view_list_flag == 1)
+                    '{{ $v->name }}' : '{{ $v->view_list_title }}' ,
+                    @endif
+                @endforeach
+                EDIT        : 'EDIT'
+            },
+            sortable: [
+                @foreach ($crud_config->table_desc as $v)
+                    @if ($v->view_list_flag == 1)
+                    '{{ $v->name }}' ,
+                    @endif
+                @endforeach
+            ],
+            texts: {
+                filterPlaceholder: '検索する',
+                count            : 'Showing {from} to {to} of {count} records|{count} records|One record',
+                count            : '{from} - {to} 件 / {count} 件中 |{count} 件|1 件',
+                filter           : '検索', // Filter Results:
+                limit            : '表示件数',  // Records:
+                noResults        : 'No matching records',
+                page             : 'Page:', // for dropdown pagination
+                filterBy         : 'Filter by {column}', // Placeholder for search fields when filtering by column
+                loading          : 'Loading...', // First request to server
+                defaultOption    : 'Select {column}' // default option for list filters
+
+            } ,
+            sortIcon : { base:'fa', up:'fa-chevron-up', down:'fa-chevron-down', is:'fa-sort' } ,
+            perPage       : 20 ,
+            perPageValues : [5,10,15,20,25,30,40,50,100] ,
+        }
+    } ,
+    methods : {
+        get_ajax: function (url, name) {
+            return axios.get(url)
+            .then((res) => {
+                // console.log( res.data );
+                this.data = res.data;
+            });
+        } ,
+        post_ajax: function (url, postdata) {
+            return axios.post(url, postdata)
+            .then((res) => {
+                console.log( "axios.post を実行しました" );
+                console.log( res.data );
+                // this.data = res.data;
+            }).catch(err => {
+                console.log('err:', err);
+            });
+        } ,
+        // deleteItem: function( data_obj ) {
+        //     var index = this.data.indexOf(data_obj);
+        //     console.log( 'index:' + index );
+        //     // this.data.splice(index, 1)
+        // } ,
+        deleteItemFromId: function( id ) {
+            for (var i = 0; i < this.data.length; i++) {
+                if ( this.data[i].id == id ){
+                    this.data.splice(i, 1);
+                    break;
+                }
+            }
+            // var index = this.data.indexOf(data_obj);
+            // console.log( 'index:' + index );
+        } ,
+        rowView: function (id) {
+            // console.log( id );
+          // メソッド内の `this` は、 Vue インスタンスを参照します
+          // alert('Hello ' + this.name + '!')
+          // `event` は、ネイティブ DOM イベントです
+          // if (event) { alert(event.target.tagName) }
+          // console.log( this.mydata.table_name );
+          // location.href = this.mydata.table_name + '_view.html';
+          // console.log( this.$route );
+          var back_uri = encodeURIComponent('/{{class}}/#' + this.$route.fullPath);
+          location.href = '/{{class}}/' + id + '?back_uri=' + back_uri ;
+        } ,
+        rowEdit: function (id) {
+          // location.href = this.mydata.table_name + '_edit.html';
+          var back_uri = encodeURIComponent('/{{class}}/#' + this.$route.fullPath);
+          location.href = '/{{class}}/' + id + '/edit' + '?back_uri=' + back_uri ;
+        } ,
+        rowDelete: function (row, modal_title) {
+            // console.log( row );
+
+            if ( confirm("クライアント「" + modal_title + "」を削除します。\nよろしいですか?") ){
+                var url = '/{{class}}/' + row.id + '/destroy_ajax';
+                var postdata = {
+                    "_method" : "DELETE" ,
+                    "_token"  : "{{ csrf_token() }}" ,
+                };
+
+                axios.post(url, postdata)
+                    .then((res) => {
+                        console.log( "axios.post を実行しました" );
+                        console.log( "vue.js データから削除" );
+                        // vue.js データから削除を実行
+                        this.deleteItemFromId(row.id);
+                        // 削除しました表示
+                       $("#result").hide()
+                                    .html('<div class="alert alert-danger"><button type="button" class="close">×</button>' + modal_title + 'を削除しました</div>')
+                                    .fadeIn(500);
+                        window.setTimeout(function() {
+                            $(".alert").fadeTo(500, 0).slideUp(500, function(){
+                                $(this).remove();
+                            });
+                        }, 10000);
+
+
+                    }).catch(err => {
+                        console.log('err:', err);
+                    });
+            }
+        } ,
+       onUpdate() {
+        console.log( 'onUpdate()' );
+
+         this.$refs.table.refresh();
+        }
+    } ,
+    created: function() {
+        this.get_ajax('/{{class}}/index_ajax'); // データ読み込み
+    } ,
+
+    // データテーブルマウント時に発火
+    mounted: function() {
+        var route_name = this.$route.name;
+        var query = this.$route.query;
+
+
+        // this.get_ajax('/{{class}}/indexapi'); // データ読み込み
+
+        // console.log(route_name);
+        // console.log(query);
+
+        // テーブル表示時にURLに検索文字列がある場合は検索する
+        if (route_name == 'search'){
+            // query がセットしてある場合はフィルタ検索実行
+            if ( query.q ){
+                this.$refs.table.setFilter( query.q );
+            }
+            // per_page がセットしてある場合は数値を変更
+            if ( query.per_page ){
+                this.$refs.table.setLimit( query.per_page );
+            }
+            // page_no がセットしてある場合はページャー移動
+            if ( query.page_no ){
+                this.$refs.table.setPage( query.page_no );
+            }
+            // column がセットしてある場合はソート実行
+            if ( query.column ){
+                var asc = true;
+                if (query.direction == 'DESC'){ asc = false;}
+                this.$refs.table.setOrder( query.column, asc );
+            }
+        }
+    }
+});
+
+
+
+const Event = VueTables.Event // import eventbus
+
+// ページ番号変更時に発火するイベント
+Event.$on('vue-tables.pagination', function (data) {
+    // console.log( 'Event vue-tables.pagination:' );
+    var now_query = vm.$route.query;
+    var new_query = {};
+    if (now_query){ new_query = JSON.parse(JSON.stringify(now_query)); }    // 実コピー
+    new_query.page_no = data;
+
+    // 既にセットされている query から page_noのみ変更する
+    // var new_query ={page_no:data};
+    // if ( now_query.q ){ new_query.q = now_query.q; } // q が既にセットされている場合はセットする
+    // if ( now_query.per_page ){ new_query.per_page = now_query.per_page; }    // per_page が既にセットされている場合はセットする
+    // console.log( '↓このデータで更新します' ); console.log( new_query );
+    router.push( {name:'search', query:new_query} );
+});
+
+// 検索時に発火するイベント
+Event.$on('vue-tables.filter', function (data) {
+    // console.log( 'Event vue-tables.filter:' );
+    // console.log( data );
+
+    var now_query = vm.$route.query;
+    var new_query = {};
+    if (now_query){ new_query = JSON.parse(JSON.stringify(now_query)); }    // 実コピー
+    new_query.q = data;
+    new_query.page_no = 1;  // 検索時にはページ番号を 1 にする
+// console.log( new_query );
+    router.push( {name:'search', query:new_query} );
+});
+
+// ソート時に発火するイベント
+Event.$on('vue-tables.sorted', function (data) {
+    // console.log( 'Event vue-tables.sorted:' );
+    // console.log( data );
+
+    var now_query = vm.$route.query;
+    var new_query = {};
+    if (now_query){ new_query = JSON.parse(JSON.stringify(now_query)); }    // 実コピー
+    new_query.column    = data.column;
+    new_query.direction = 'ASC';
+    if (data.ascending == false){ new_query.direction = 'DESC'; }
+    // OFF new_query.page_no = 1;   // ソート時にはページ番号を 1 にする
+// console.log( new_query );
+    router.push( {name:'search', query:new_query} );
+    // ページ移動実行
+    // console.log( this );
+    // this.$refs.table.setPage( 1 );
+});
+
+// PerPage変更時に発火するイベント
+Event.$on('vue-tables.limit', function (data) {
+    // console.log( 'Event vue-tables.pagination:' );
+    var now_query = vm.$route.query;
+    var new_query = {};
+    if (now_query){ new_query = JSON.parse(JSON.stringify(now_query)); }    // 実コピー
+    new_query.per_page = data;
+    new_query.page_no = 1;
+
+    // PerPage変更時にはページ番号を 1 にする
+    // var new_query = {per_page:data, page_no:1};
+    // if ( now_query.q ){ new_query.q = now_query.q; } // q が既にセットされている場合はセットする
+    // console.log( '↓このデータで更新します' ); console.log( new_query );
+    router.push( {name:'search', query:new_query} );
+});
+
+
+
+function getData() {
+    const arr = []
+    for (i = 0; i < 1; i++) {
+        arr.push({});
+
+        // arr.push({
+        //     'id': i,
+        //     'client_name': `会社名${i}`,
+        //     'projects_loop': [
+        //         {id:1, project_name:'プロジェクト1'} ,
+        //         {id:2, project_name:'プロジェクト2'} ,
+        //     ],
+        //     'tanto_loop'  : [
+        //         {id:1, tanto_name:'山田 太郎', tel_name:'090-123-4567', email_name:'yamada@testcompany.co.jp' } ,
+        //         {id:1, tanto_name:'斎藤 花子', tel_name:'050-777-8888', email_name:'hanako@testcompany.co.jp' } ,
+        //     ],
+        //     'tel_name'         : '000-111-2222',
+        //     'role'        : '管理者',
+        // });
+    }
+    return arr;
+}
+</script>
+
+
+<!-- Modal -->
+<div class="modal fade" id="modalConfirmDelete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">データの削除</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        「<span class="item-title">XXX</span>」を削除します。よろしいですか？
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger modal__delete_btn" data-dismiss="modal">削除する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// モーダルにパラメータ渡し
+$('#modalConfirmDelete').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget);
+    var title = button.data('title');
+    var modal = $(this);
+    modal.find('.item-title').text(title);
+  })
+
+
+// 削除後のアラート
+$(document).ready(function(){
+    $(".modal__delete_btn").click( function() {
+      //$.post( $("#updateunit").attr("action"),
+       // $("#updateunit :input").serializeArray(),function(info){
+       $("#result").html('<div class="alert alert-danger"><button type="button" class="close">×</button>データを削除しました</div>');
+        window.setTimeout(function() {
+            $(".alert").fadeTo(500, 0).slideUp(500, function(){
+                $(this).remove();
+            });
+        }, 30000);
+      $('.alert .close').on("click", function(e){
+            $(this).parent().fadeTo(500, 0).slideUp(500);
+         });
+      //});
+    });
+});
+
+
+</script>
+
+
+@endsection
+

@@ -15,6 +15,11 @@ class {{class}} extends Migration {
 		{{schema_up}}
 	}
 
+
+        // SET auto-increment start value
+        // DB::statement("ALTER TABLE XXXXXXXXX AUTO_INCREMENT = 5000;");
+
+
 	/**
 	 * Reverse the migrations.
 	 *

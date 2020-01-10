@@ -1,62 +1,249 @@
-@extends('layouts.app')
+@php
+    $back_relative_url = str_replace(url('/'),"",request()->fullUrl());
+@endphp
 
-@section('create_header')
-    <div class="row">
-        <div class="col-md-12">
-        <h1>
-            <i class="glyphicon glyphicon-align-justify"></i> {{Class}}
-            <a class="btn btn-success pull-right" href="{{ route('{{prefix}}{{class}}.create') }}"><i class="glyphicon glyphicon-plus"></i> Create</a>
-        </h1>
-        </div>
+
+@extends('{{extends}}')
+
+
+@php
+    $page_title  =  $crud_config->table_title or '{{class}}';
+    $page_title .= \Lang::get('excrud.list');
+    $page_title_header = $page_title;
+@endphp
+
+
+@section('content__header')
+<div class="row content__header">
+    <div class="col-md-12">
+    <h1 class="mt10">
+        {{$page_title_header}}
+        @if ( $crud_config->table_sort_sortable )
+            <a class="btn btn-default pull-right" href="{{ route('{{prefix}}{{class}}.sort') }}?_back_uri={{ str_replace(url('/'),"",request()->fullUrl()) }}"><i class="glyphicon glyphicon-plus"></i> @lang('excrud.sort')</a>
+        @endif
+        @if ( @$crud_config->view_list_add_buttons_flag !== 0 )
+            <a class="mr15 btn btn-success pull-right" href="{{ route('{{prefix}}{{class}}.create') }}?_back_uri={{ urlencode(str_replace(url('/'),"",request()->fullUrl())) }}"><i class="glyphicon glyphicon-plus"></i> @lang('excrud.create')</a>
+        @endif
+    </h1>
     </div>
+</div>
 @endsection
 
+@section('content__search')
+<div class="row content__search">
+<div class="col-md-12">
+    <form name="FM" action="{{ route('{{prefix}}{{class}}.index') }}">
+        <p>
+            @lang('excrud.search')：
+            <select name="search_column">
+            @if (isset( $search_columns_loop ))
+                @if( $crud_config->view_list_search_all_flag==1 )
+                    <option value="">@lang('excrud.search_all')</option>
+                @endif
+            @foreach ($search_columns_loop as $k => $v)
+                <option value="{{$k}}" @if( @$q['search_column'] == $k) selected @endif>{{$v}}</option>
+            @endforeach
+            @endif
+            </select>
+            <input type="text" name="q" value="{{ @$q['q'] }}">
+            <button class="btn">@lang('excrud.search')</button>
+        </p>
+    </form>
+</div>
+</div>
+@endsection
+
+
 @section('content')
-<div class="container">
 
-    @yield('create_header')
-
-<div class="row justify-content-center">
-
+    @yield('content__header')
+    @yield('content__search')
 
     <div class="row">
         <div class="col-md-12">
-            @if(${{class}}->count())
-                <table class="table table-condensed table-striped">
+
+        @if(@$crud_config->view_list_checkbox_flag == 1)
+        <div style="display:none;" id="dl_delete"><a href="javascript:dl_delete_jump('{{ request()->fullUrl() }}');" class="btn btn-sm btn-danger"><i class="fa fa-trash fa-lg"></i> 削除</a></div>
+        @endif
+
+            @if(${{class}}_rows->count())
+                <table class="table table-hover table-condensed table-striped table-bordered table_sm">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            {{header_fields}}
+                        @if(@$crud_config->view_list_checkbox_flag == 1)
+                            <th><input type="checkbox" name=""></th>
+                        @endif
+                        @foreach ($crud_config->table_desc as $v)
+                            @if ($v->view_list_flag == 1)
+
+                                @if ( isset($v->view_list_sortable) && $v->view_list_sortable==0)
+                                    <th class="notsortable">{{ $v->view_list_title }}</th>
+                                @else
+                                    <th class="sortable">
+                                        @if ( @$v->sortable_flag === 0 )
+                                            {{ $v->view_list_title }}
+                                        {{-- name が アンダースコアで始まる場合はソートしない --}}
+                                        @elseif ( preg_match("{^_.+}",$v->name) )
+                                            <a>{{ $v->view_list_title }}</a>
+                                        @else
+                                            @if ( app('request')->input('column') == $v->name && app('request')->input('direction') == 'asc')
+                                                <a href="javascript:sort('{{ Request::url() }}','{{$v->name}}','desc');">{{ $v->view_list_title }}<i class="fa fa-chevron-up sort-icon"></i></a>
+                                            @elseif ( app('request')->input('column') == $v->name && app('request')->input('direction') == 'desc')
+                                                <a href="javascript:sort('{{ Request::url() }}','{{$v->name}}','asc');">{{ $v->view_list_title }}<i class="fa fa-chevron-down sort-icon"></i></a>
+                                            @else
+                                                <a href="javascript:sort('{{ Request::url() }}','{{$v->name}}','asc');">{{ $v->view_list_title }}<i class="fa fa-sort sort-icon"></i></a>
+                                            @endif
+                                        @endif
+                                    </th>
+                                @endif
+
+                            @endif
+                        @endforeach
                             <th class="text-right">OPTIONS</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @foreach(${{class}} as ${{classSingle}})
+                        @foreach(${{class}}_rows as ${{classSingle}})
                             <tr>
-                                <td>{{${{classSingle}}->id}}</td>
-                                {{content_fields}}
+                            @if(@$crud_config->view_list_checkbox_flag == 1)
+                                <td><input type="checkbox" class="dl" onclick="dl_check();" name="data_list[]" value="{{${{classSingle}}->id}}"></td>
+                            @endif
+                            @foreach ($crud_config->table_desc as $v)
+                                @if ($v->view_list_flag == 1)
+                                <td>
+                                    {{-- css class or style --}}
+                                    @if ( @$v->view_list_css_class or @$v->view_list_css_style)
+                                        <div class="{{@$v->view_list_css_class}}" style="{{@$v->view_list_css_style}}">
+                                    @endif
+                                    {{-- / css class or style --}}
+
+                                    {{-- リレーション --}}
+                                    @if ( @$v->relation=='hasMany' )
+                                        @php
+                                            if ( @$v->relation_view_list_php ){
+                                                eval( $v->relation_view_list_php );
+                                            }
+                                            elseif ( @$v->relation_view_list_param ){
+                                                eval("echo \"{$v->relation_view_list_param}\";");
+                                            } else {
+                                                echo ${{classSingle}}->{$v->relation_method}->implode($v->relation_view_column_name,' , ');
+                                            }
+                                        @endphp
+                                    {{-- / リレーション --}}
+                                    @elseif (isset( $v->view_list_format ))
+                                        @php
+                                            $class = @$v->view_list_css_class;
+                                            $style = @$v->view_list_css_style;
+                                            echo "<div class=\"{$class}\" style=\"{$style}\">";
+                                            $a = $v->view_list_format;
+                                            eval("echo($a);");
+                                            echo "</div>"
+                                        @endphp
+                                    @elseif (isset( $v->view_list_param ))
+                                        @php
+                                            eval( "echo @" . $v->view_list_param . ";" );
+                                        @endphp
+                                    @elseif (isset( $v->view_list_php ))
+                                        @php
+                                            eval( $v->view_list_php );
+                                        @endphp
+                                    @else
+                                        {{ ${{classSingle}}[$v->name] }}
+                                    @endif
+
+                                    {{-- css class or style --}}
+                                    @if ( @$v->view_list_css_class or @$v->view_list_css_style)
+                                        </div>
+                                    @endif
+                                    {{-- / css class or style --}}
+                                </td>
+                                @endif
+                            @endforeach
+
                                 <td class="text-right">
-                                    <a class="btn btn-xs btn-primary" href="{{ route('{{prefix}}{{class}}.show', ${{classSingle}}->id) }}"><i class="glyphicon glyphicon-eye-open"></i> View</a>
-                                    <a class="btn btn-xs btn-warning" href="{{ route('{{prefix}}{{class}}.edit', ${{classSingle}}->id) }}"><i class="glyphicon glyphicon-edit"></i> Edit</a>
-                                    <form action="{{ route('{{prefix}}{{class}}.destroy', ${{classSingle}}->id) }}" method="POST" style="display: inline;" onsubmit="if(confirm('Delete? Are you sure?')) { return true } else {return false };">
-                                        <input type="hidden" name="_method" value="DELETE">
-                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> Delete</button>
-                                    </form>
+                                    @if ( @$crud_config->view_list_edit_buttons_include )
+                                        @include( $crud_config->view_list_edit_buttons_include, compact('q','shop') )
+                                    @else
+                                        <a class="btn btn-xs btn-primary" href="{{ route('{{prefix}}{{class}}.show', ${{classSingle}}->id) }}?_back_uri={{ urlencode( str_replace(url('/'),"",request()->fullUrl()) ) }}"><i class="glyphicon glyphicon-eye-open"></i> @lang('excrud.show')</a>
+                                        <a class="btn btn-xs btn-warning" href="{{ route('{{prefix}}{{class}}.edit', ${{classSingle}}->id) }}?_back_uri={{ urlencode( str_replace(url('/'),"",request()->fullUrl()) ) }}"><i class="glyphicon glyphicon-edit"></i> @lang('excrud.edit')</a>
+                                        <form action="{{ route('{{prefix}}{{class}}.destroy', ${{classSingle}}->id) }}" method="POST" style="display: inline;" onsubmit="if(confirm('Delete? Are you sure?')) { return true } else {return false };">
+                                            <input type="hidden" name="_method" value="DELETE">
+                                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="_back_uri" value="{!! request()->fullUrl() !!}">
+                                            <button type="submit" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> @lang('excrud.delete')</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-                {!! ${{class}}->render() !!}
+
+                <hr>
+                <!-- ===== pagination ===== -->
+                @php
+                    if ( ! $crud_config->view_list_limit_param ){
+                        $crud_config->view_list_limit_param   = [10,20,25,30,50,100];
+                    }
+                @endphp
+
+                <div>
+                    <div style="float:left; padding-top:5px; margin-right:15px;">
+                        <select style="float:left" id="limit" onchange="change_limit();">
+                        @foreach ($crud_config->view_list_limit_param as $lpv)
+                            <option value="{{$lpv}}" @if( @$q['limit'] == $lpv) selected @endif>{{$lpv}}</option>
+                        @endforeach
+                        </select>
+                        <p style="float:left; margin-left:5px; padding-top:2px;">件 表示</p>
+                        <p style="float:left; margin-left:5px; padding-top:2px;">合計 {!! ${{class}}_rows->appends($pagination_params)->total() !!}件 </p>
+                        <p class="index_sort_name">ソート順 ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')降順 @else 昇順 @endif) </p>
+                    </div>
+                    <div class="mx-auto" style="width: 400px;">
+                        {!! ${{class}}_rows->appends($pagination_params)->links('pagination.default') !!}
+                    </div>
+                </div>
+                <!-- ===== / pagination ===== -->
+
             @else
-                <h3 class="text-center alert alert-info">Empty!</h3>
+                <h3 class="h6 text-center alert alert-info">Empty!</h3>
             @endif
 
         </div>
     </div>
 
-</div>
-</div>
+<script src="{{ asset('/assets/excrud/js/url.min.js') }}" defer></script>
+<script src="{{ asset('/assets/excrud/js/excrud.js') }}" defer></script>
+
+<script>
+function change_limit(){
+    // 今のURLのlimitを書き換える。limitがない場合は付け加える というロジックに変更予定
+    add_hidden_limit();
+}
+
+function add_hidden_limit(){
+    var v = $('#limit').val();
+    if ( !v ){ v = 10; }
+    if ( v ) {
+        make_hidden( 'limit', v, 'FM' );
+        document.FM.submit();
+    }
+    return false;
+}
+
+function make_hidden( name, value, formname ){
+    var q = document.createElement('input');
+    q.type = 'hidden';
+    q.name = name;
+    q.value = value;
+	if (formname){ document.forms[formname].appendChild(q); }
+    else{ document.forms[0].appendChild(q); }
+}
+</script>
+
+@if(env('APP_DEBUG') == 1)
+    @php($template_filename = '{{prefix}}{{class}}/index.blade.php')
+    @php($compiled_template_filename = __FILE__)
+@endif
+
 @endsection

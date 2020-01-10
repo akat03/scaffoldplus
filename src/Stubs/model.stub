@@ -1,0 +1,38 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class {{model_name_class}} extends Model
+{
+
+    use \App\CrudTrait;
+
+
+    // Table Name
+    protected $table = '{{model_name_var}}';
+
+
+    // guarded
+    protected $guarded = ['id', 'created_at', 'updated_at'];
+
+
+    // thease columns can use  ->format('Y/m/d')  method
+    protected $dates = [''];
+
+
+    // /**
+    //  * boot method
+    //  * @return void
+    //  */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // GlobalScope
+        // static::addGlobalScope(new XXXXXXXX);
+    }
+
+
+}

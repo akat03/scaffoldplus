@@ -1,10 +1,4 @@
-@extends('{{extends}}')
-
-@php
-    $page_title  =  $crud_config->table_title or '{{class}}';
-    $page_title .= \Lang::get('excrud.show');
-    $page_title_header = $page_title;
-@endphp
+@extends('layout')
 
 @section('header')
 @endsection
@@ -15,18 +9,15 @@
 .crud_table tr td:nth-of-type(1){
     width: 30%;
 }
-.crud_table img{
-    max-width:100%;
-}
 </style>
 
 <article>
     <!-- card -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h2 class="h6 mb-0">{{$page_title_header}}</h2>
+            <h2 class="h6 mb-0"><i class="fa fa-suitcase"></i> 詳細表示</h2>
 <!--            <button onclick="location.href='user_edit.html'" type="button" class="btn btn-sm btn-default"><i class="fa fa-edit"></i> 新規作成</button> -->
-            <a href="{{ route('{{prefix}}{{class}}.edit', ${{classSingle}}->id) }}?_back_uri={{ request()->fullUrl() }}" class="btn btn-sm btn-success"><i class="fa fa-edit"></i> @lang('excrud.edit')</a>
+            <a href="{{ route('{{class}}.edit', ${{classSingle}}->id) }}?_back_uri={{ request()->fullUrl() }}" class="btn btn-sm btn-success"><i class="fa fa-edit"></i> 編集</a>
         </div>
         <div class="card-body">
 
@@ -51,18 +42,7 @@
                         </td>
 
                         <td>
-                            {{-- リレーション --}}
-                            @if ( @$v->relation=='hasMany' )
-                                @php
-                                    $relation_models = new $v->relation_model;
-                                    $select_options = [];
-                                    foreach (${{classSingle}}->{$v->relation_method} as $relation_model) {
-                                        eval("echo \"{$v->relation_view_show_param}\";");
-                                        echo $v->relation_view_show_separator;
-                                    }
-                                @endphp
-                            {{-- / リレーション --}}
-                            @elseif (isset( $v->view_show_format ))
+                            @if (isset( $v->view_show_format ))
                                 @php
                                     $a = $v->view_show_format;
                                     // $a = str_replace('"', '\"', $a);
@@ -79,12 +59,8 @@
                                     eval( "echo @" . $v->view_show_param . ";" );
                                     echo "</div>"
                                 @endphp
-                            @elseif (isset($v->view_show_php))
-                                @php
-                                    eval( $v->view_show_php );
-                                @endphp
                             @else
-                                {!! nl2br(${{classSingle}}[$k]) !!}
+                                {{ ${{classSingle}}[$k] }}
                             @endif
 
                         </td>
@@ -98,18 +74,10 @@
             </table>
 
 
-@php
-    $_blade_back_uri = '';
-    if ( @$_back_uri ){
-       if( ! preg_match("{https?://}",$_back_uri) ){ $_blade_back_uri = url('/').$_back_uri; }
-       else{ $_blade_back_uri = $_back_uri; }
-    }
-    else {
-       route('{{prefix}}{{class}}.index');
-    }
-@endphp
-<a class="btn mt15" href="{{$_blade_back_uri}}">@lang('excrud.back')</a>
+            <a class="btn btn-link" href="@if($_back_uri){{ $_back_uri }}@else{{ route('{{prefix}}{{class}}.index') }}@endif">Back</a>
 
+            <?php $current_controller_name = explode('.', Route::currentRouteName())[0]; ?>
+            <a class="btn btn-light" href="@if(@$_back_uri){{ $_back_uri }}@else{{ route("{$current_controller_name}.index") }}@endif">戻る</a>
 
         </div>
     </div>

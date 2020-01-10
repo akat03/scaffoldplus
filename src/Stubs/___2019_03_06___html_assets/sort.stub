@@ -1,0 +1,131 @@
+@php
+    $back_relative_url = str_replace(url('/'),"",request()->fullUrl());
+@endphp
+
+{{-- template extends --}}
+@extends('admin.layout_admin')
+
+
+{{-- page title / header title --}}
+@php
+    $page_title  =  $crud_config->table_title or '{{class}}';
+    $page_title .= \Lang::get('excrud.sort');
+    $page_title_header = $page_title;
+@endphp
+
+
+@section('content__header')
+    <div class="row">
+        <div class="col-md-12">
+        <h1 class="mt10">
+            {{$page_title_header}}
+            <a class="btn btn-default pull-right" href="{{$q['_back_uri']}}"><i class="glyphicon glyphicon-plus"></i> @lang('excrud.back')</a>
+        </h1>
+        </div>
+    </div>
+@endsection
+{{--
+@section('content__search')
+<div class="row">
+<div class="col-md-12">
+    <form name="FM" action="{{ route('admin.{{class}}.index') }}">
+        <p>
+            @lang('excrud.search')：
+            <select name="search_column">
+            @if (isset( $search_columns_loop ))
+                <option value="">全て</option>
+            @foreach ($search_columns_loop as $k => $v)
+                <option value="{{$k}}" @if( @$q['search_column'] == $k) selected @endif>{{$v}}</option>
+            @endforeach
+            @endif
+            </select>
+            <input type="text" name="q" value="{{ $q['q'] or '' }}">
+            <button>@lang('excrud.search')</button>
+        </p>
+    </form>
+</div>
+</div>
+@endsection
+ --}}
+
+@section('content')
+
+    @yield('content__header')
+    {{-- @yield('content__search') --}}
+
+<section class="draggable_container">
+<h2 class="h5 mt-4 mb-2"><span class="title_small">@lang('excrud.mes__sort__01')</span></h2>
+
+<style type="text/css">
+.v-enter-active, .v-leave-active {
+  transition: opacity .75s;
+}
+.v-enter, .v-leave-to {
+  opacity: 0;
+}
+[v-cloak] {
+  display: none;
+}
+.drag_div:hover {
+    cursor: move;
+}
+.dragarea , .dragarea div{
+    width: 500px;
+}
+.drag_div {
+    width: 100%;
+}
+</style>
+
+
+<div id="app">
+    <draggable :list="data_loop" :options="{animation:200,handle:'.drag_div'}" class="dragarea table" @end="onEnd" v-cloak>
+
+        <transition-group tag="div" style="display: table-row-group;">
+        <div v-for="v,i in data_loop" :key="v.id" class="table_row drag_div">
+            <div class="table_cell"><i class="fa fa-bars"></i></div>
+            @foreach ($crud_config->table_desc as $v)
+                @if ($v->view_list_flag == 1 && $v->name != 'sort_no' )
+                <div class="table_cell">
+                    (% v.{{$v->name}} %)
+                </div>
+                @endif
+
+            @endforeach
+        </div>
+        </transition-group>
+
+    </draggable>
+    <div id="result"></div><!-- notification -->
+
+</div>
+<a class="btn btn-default" href="{{$q['_back_uri']}}"><i class="glyphicon glyphicon-plus"></i> @lang('excrud.back')</a>
+</section>
+
+<script src="{{ asset('/assets/excrud/js/url.min.js') }}" defer></script>
+<script src="{{ asset('/assets/excrud/js/excrud.js') }}" defer></script>
+
+<script type="text/javascript">
+    var vue_sort__model_name = '{{class}}';
+    var vue_sort__data_loop  = {!! ${{class}}->toJson() !!};
+    console.log( vue_sort__data_loop );
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.7.0/Sortable.min.js" ></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.16.0/vuedraggable.min.js" ></script>
+<script type="text/javascript">
+var _global_crud_sort_url = '/admin/{{class}}/sort_exec_ajax';
+</script>
+<script src="{{ asset('/assets/vue/vue_sort.js') }}" ></script>
+
+
+
+@if(env('APP_DEBUG') == 1)
+    @php($template_filename = 'admin.{{class}}/sort.blade.php')
+    @php($compiled_template_filename = __FILE__)
+@endif
+
+@endsection

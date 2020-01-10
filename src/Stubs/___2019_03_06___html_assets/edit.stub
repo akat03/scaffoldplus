@@ -25,10 +25,10 @@
 @section('content')
 
 @if( Route::currentRouteName() == '{{prefix}}{{class}}.edit' )
-<form onsubmit="return notrepeat();" action="{{ route('{{prefix}}{{class}}.update', ${{classSingle}}->id) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('{{prefix}}{{class}}.update', ${{classSingle}}->id) }}" method="POST">
 @method('put')
 @elseif( Route::currentRouteName() == '{{prefix}}{{class}}.create' )
-<form onsubmit="return notrepeat();" action="{{ route('{{prefix}}{{class}}.store') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('{{prefix}}{{class}}.store') }}" method="POST">
 @else<h1>ERROR: not match currentRouteName</h1>
 @endif
 
@@ -83,23 +83,20 @@
                     @if ( @$v->relation=='hasMany' )
                         @php
                             // dump($k); echo ${{classSingle}}->{$v->relation_method}->implode($v->relation_view_column_name,', ');
-                            $relation_models = new $v->relation_model;
-                            $select_options = [];
-                            foreach ($relation_models->get() as $relation_model) {
-                                $select_options[$relation_model->id] = eval("return \"{$v->relation_view_edit_param}\";");
-                                // $select_options[$model->id] = $model['name'];
-                            }
+                            $relation_model = new $v->relation_model;
+                            $select_options = $relation_model->select($v->relation_id_column_name, $v->relation_view_column_name)->get()
+                                ->pluck($v->relation_view_column_name,$v->relation_id_column_name)
+                                ->prepend('選択してください','');
 
                             // set default JSON values
                             ${'json__'.$k} = ${{classSingle}}->{$v->relation_method}->pluck(['id'])->toJson();
                             // dump(${'json__'.$k});
-
                             echo "<script>\n";
                             echo "var select2_default__{$k} = " . ${'json__'.$k} . ";\n";
                             echo "</script> \n";
                         @endphp
 
-                        <select class="form-control select2-multiple" id="relation__{{$k}}" name="relation__{{$k}}[]" multiple="multiple">
+                        <select class="form-control select2-multiple" id="relation__{{$k}}" name="relation__{{$k}}[]" multiple="multiple" style="height:2em;">
                             @foreach ($select_options as $opk => $opv)
                             <option value="{{$opk}}">{{$opv}}</option>
                             @endforeach
@@ -107,31 +104,12 @@
 
                         <script type="text/javascript">
                         $(document).ready(function() {
-                            $('#relation__{{$k}}').select2({
-                                placeholder: '選択してください' ,
-                            });
-
+                            $('#relation__{{$k}}').select2();
                             $('#relation__{{$k}}').val(select2_default__{{$k}}).trigger("change");
-
-                            // 未選択の時は [0 => null] を送信する
-                            $('#relation__{{$k}}').on("select2:unselect", function(e){
-                                var unselected_value = $('#relation__{{$k}}').val();
-                                if ( unselected_value.length == 0 ){ $('#relation__{{$k}}').val([null]); }
-                            }).trigger('change');
                         });
                         </script>
                     {{-- / リレーション --}}
-
-                    @elseif ( @$v->view_add_php && Route::currentRouteName() == '{{prefix}}{{class}}.create' )
-                        @php
-                            eval( $v->view_add_php );
-                        @endphp
-                    @elseif ( @$v->view_edit_php && Route::currentRouteName() == '{{prefix}}{{class}}.edit' )
-                        @php
-                            eval( $v->view_edit_php );
-                        @endphp
-
-                    @elseif ( @$v->view_edit_param )
+                    else@if ( @$v->view_edit_param )
                             @php
                                 $class = '';
                                 $style = '';
@@ -145,92 +123,28 @@
                         {{ ${{classSingle}}[$k] }}
                     @endif
                 @else
-                    {{-- 1. css style --}}
-                    @php
-                        if ( @$v->view_edit_css_class || @$v->view_edit_css_style ){
-                            echo '<div class="' .@$v->view_edit_css_class. '" style="' .@$v->view_edit_css_style. '">';
-                        }
-                    @endphp
-                    {{-- / 1. css style --}}
-
-                    {{-- 2. pre label --}}
-                    @php
-                        if ( @$v->view_edit_pre_label ){
-                            $tmp_css_stype = @$v->view_edit_css_style;
-                            $label_width = '100px;';
-                            if ( @$v->view_edit_pre_label_width ){ $label_width = $v->view_edit_pre_label_width; }
-                            echo "<div class='flexbox' style='display:flex; {$tmp_css_stype}'>";
-                            echo "<section style='width:{$label_width}; padding:5px;'>{$v->view_edit_pre_label}</section>";
-                            echo "<section style='flex:1'>";
-                        }
-                    @endphp
-                    {{-- / 2. pre label --}}
-
                     @php
                         $class_name = 'form-control';
                         if (@$v->view_edit_css_class ){ $class_name .= " ".$v->view_edit_css_class; }
                     @endphp
 
-                    @if ( strcmp($v->input_type, 'text') == 0 )
-                        {{-- view_edit_param が設定されているときは実行する --}}
-                        @php
-                            $_form_value = '';
-                            if ( @$v->view_edit_param ) { $_form_value = eval( "return @" . $v->view_edit_param . ";" );  }
-                            else { $_form_value = ${{classSingle}}[$k]; }
-                        @endphp
-                        {{-- / view_edit_param が設定されているときは実行する --}}
-                        {{ Form::text($k, $_form_value, ['class' => $class_name, 'style' => @$v->input_css_style]) }}
-
-                    {{-- <input type="tel"> --}}
-                    @elseif ( strcmp($v->input_type, 'tel') == 0 )
-                        {{-- view_edit_param が設定されているときは実行する --}}
-                        @php
-                            $_form_value = '';
-                            if ( @$v->view_edit_param ) { $_form_value = eval( "return @" . $v->view_edit_param . ";" );  }
-                            else { $_form_value = ${{classSingle}}[$k]; }
-                        @endphp
-                        {{-- / view_edit_param が設定されているときは実行する --}}
-                        {{ Form::tel($k, $_form_value, ['class' => $class_name, 'style' => @$v->input_css_style]) }}
-
-                    @elseif ( strcmp($v->input_type, 'textarea') == 0 )
-                        {{ Form::textarea($k, ${{classSingle}}[$k], ['rows' => 3, 'class' => $class_name, 'style' => @$v->input_css_style]) }}
+                    @if ( strcmp($v->input_type, 'text') == 0 ) {{ Form::text($k, ${{classSingle}}[$k], ['class' => $class_name]) }}
+                    @elseif ( strcmp($v->input_type, 'textarea') == 0 ) {{ Form::textarea($k, ${{classSingle}}[$k], ['class' => $class_name]) }}
                     @elseif ( strcmp($v->input_type, 'select') == 0 )
                         {{-- モデルから <select> を生成 --}}
                         @if ( @$v->input_values_model )
                             @php
                                 $relation_model = new $v->input_values_model;
-
-                                // スコープが指定されているときは実行する
-                                if ( $v->input_values_model__scope ){
-                                    $scope_method = $v->input_values_model__scope;
-                                    $relation_model = $relation_model->$scope_method();
-                                }
-
                             @endphp
                             {{ Form::select($k, $relation_model->select($v->input_values_model__id_column, $v->input_values_model__name_column)->get()
                                 ->pluck($v->input_values_model__name_column,$v->input_values_model__id_column)
                                 ->prepend('選択してください','')
                                 , ${{classSingle}}[$k], ['class' => $class_name]) }}
-                        {{-- / モデルから <select> を生成 --}}
-                        {{-- 直接 <select> を生成 --}}
-                        @elseif ( @$v->input_values_array )
-                            {{ Form::select($k, @$v->input_values_array, ${{classSingle}}[$k], ['class' => @$v->input_css_class, 'style' => @$v->input_css_style]) }}
-                        {{-- / 直接 <select> を生成 --}}
                         @else
                             please set 'input_values_model', 'input_values_model__id_column', 'input_values_model__name_column' in  yaml file.
                         @endif
-
-                    @elseif ( strcmp($v->input_type, 'checkbox') == 0 )
-                        {{ Form::hidden($k, 0) }}
-                        <label>
-                            @php
-                                $checked_flag = 0;
-                                if ( $v->input_checked_value == ${{classSingle}}[$k]){ $checked_flag = 1; }
-                            @endphp
-                            {{ Form::checkbox($k, $v->input_checked_value, $checked_flag, ['class' => '']) }}
-                            {{ $v->input_label }}
-                        </label>
-
+                        {{-- / モデルから <select> を生成 --}}
+                    @elseif ( strcmp($v->input_type, 'checkbox') == 0 ) {{ Form::checkbox($k, ${{classSingle}}[$k], ['class' => $class_name]) }}
                     @elseif ( strcmp($v->input_type, 'radio') == 0 ) {{ Form::radio($k, ${{classSingle}}[$k], ['class' => $class_name]) }}
                     @elseif ( strcmp($v->input_type, 'file') == 0 )
                         {{ Form::file($k.'__attach' , ['class' => 'block']) }}
@@ -250,26 +164,7 @@
                             <label class="text-danger"><input name="{{$checkbox_name}}" type="radio" value="delete"> 削除する</label>
                         @endif
                         {{-- / attach file name preview --}}
-
-                    @elseif ( strcmp($v->input_type, 'component_file') == 0 )
-                        @include('crud_components.file' ,[ 'column_name' => $k, 'column_value' => ${{classSingle}}[$k], 'class' => $class_name] )
-                        {{-- @include('crud_components.dropzone.' ,[ $k, ${{classSingle}}[$k], ['class' => $class_name] ] ) --}}
-                    @elseif ( preg_match("/component_(.+)/",$v->input_type, $r) )
-                        @include("crud_components.{$r[1]}" ,[ 'column_name' => $k, 'column_value' => ${{classSingle}}[$k], 'class' => $class_name, 'crud_config' => $v] )
                     @endif
-
-                    {{-- 2. pre label --}}
-                    @if ( @$v->view_edit_pre_label )
-                            </section>
-                    @endif
-
-                    {{-- 1. css style --}}
-                    @php
-                        if ( @$v->view_edit_css_class || @$v->view_edit_css_style ){
-                            echo "</div>";
-                        }
-                    @endphp
-                    {{-- / 1. css style --}}
                 @endif
 
                 {{-- Error Message --}}
@@ -295,7 +190,7 @@
     $_blade_back_uri = '';
     if ( @$_back_uri ){
        if( ! preg_match("{https?://}",$_back_uri) ){ $_blade_back_uri = url('/').$_back_uri; }
-       else{ $_blade_back_uri = $_back_uri; }
+       else{ $_blade_back_uri = $_back_uri; } 
     }
     else {
        route('{{prefix}}{{class}}.index');

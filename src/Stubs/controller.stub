@@ -1,34 +1,267 @@
-<?php namespace App\Http\Controllers;
+<?php
+
+namespace App\Http\Controllers{{prefix_namespace}};
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
 use {{model_path}};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use DB;
 
 class {{class}} extends Controller {
 
+
+	// File Upload Trait
+	use \App\Http\Controllers\CrudControllerTrait;
+
+	protected $search_columns;
+
+	{{validation_text}}
+
+
+	function __construct(){
+		$this->setSearchColumnsFromCrud();
+	}
+
+
 	/**
-	 * Display a listing of the resource.
-	 *
+	 * 検索に使用するカラムを明示的に設定する（適宜書き換えること。また __construct() の $this->setSearchColumnsAuto(); を $this->setSearchColumns(); に変更すること。）
+	 * @return void
+	 */
+	private function setSearchColumns(){
+		$this->search_columns = [
+			"id"                  => "id",
+			"sample__category_id" => "例__カテゴリ名",
+			"sample__title"       => "例__タイトル",
+			"sample__content"     => "例__内容",
+		];
+	}
+
+
+
+	/**
+	 * set Search Columns from CRUD YAML
+	 * @return void
+	 */
+	private function setSearchColumnsFromCrud(){
+		// CRUDS
+	 	$doctor = new {{model_name_class}}();
+		$doctor->crud_set_json('yaml');
+		$crud_config = $doctor->get_crud_config();
+		$this->search_columns = (array)$crud_config->view_list_search_columns;
+	}
+
+
+
+	/**
+	 * 検索に使用するカラムを自動的に設定する
+	 * @return void
+	 */
+	private function setSearchColumnsAuto(){
+		$columns = Schema::getColumnListing('{{model_name_var}}');
+		$columns_loop = $columns;
+		for ($i=count($columns_loop)-1; $i >=0; $i--) {
+			if ( preg_match("/(created_at|updated_at)/",$columns_loop[$i] ) ){
+				array_pop( $columns_loop );
+			}
+		}
+		foreach ($columns_loop as $v) {
+			$this->search_columns[$v] = $v;
+		}
+	}
+
+
+	/**
+	 * ajax sort method
+	 * @param  Request    $request
 	 * @return Response
 	 */
-	public function index()
+	public function sort_exec_ajax(Request $request)
 	{
-		${{model_name_var}} = {{model_name_class}}::orderBy('id', 'desc')->paginate(10);
+		$this->validate($request, [
+            'id_loop'      => 'required',
+            // 'client_id' => 'required',
+		]);
 
-		return view('{{model_name_var}}.index', compact('{{model_name_var}}'));
+		$loop = $request->id_loop;
+		$i =1;
+		foreach ($loop as $v) {
+			$model = {{model_name_class}}::find($v);
+			$model->sort_no = $i;
+			$model->save();
+			$i++;
+		}
+		return [ "result" => 1 ];
 	}
+
+
+
+	/**
+	 * Sort Method for Vue.js
+	 * @param  Request $request
+	 *				   				array 	$request->loop		// 順番通りに並べたIDの配列
+	 *				   				int 	$request->id 		// 不要？
+	 * @return array
+	 */
+	public function sort( Request $request )
+	{
+		$q = $request->all();
+
+		// CRUDS
+	 	${{model_name_var_sgl}} = new {{model_name_class}}();
+		${{model_name_var_sgl}}->crud_set_json('yaml');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+
+		// sort default
+		$column    = 'id';
+		$direction = 'desc';
+		// sort parameter
+		if (isset($q['column'])){ $column = $q['column']; }
+		if (isset($q['direction'])){ $direction = $q['direction']; }
+		if ( (! isset($q['column'])) && (! isset($q['direction'])) ){
+			$column    = $crud_config->view_list_order_column;
+			$direction = $crud_config->view_list_order_direction;
+		}
+
+		// DB
+		${{model_name_var}} = {{model_name_class}}::orderBy($column, $direction)->get();
+
+		// view
+		return view('{{prefix}}{{model_name_var}}.sort', compact('{{model_name_var}}','q', 'crud_config'));
+	}
+
+
+
+
+	/**
+	 * for Vue.js
+	 * @return array
+	 */
+	public function index_ajax( Request $request )
+	{
+		${{model_name_var}} = {{model_name_class}}::orderBy('id', 'desc')->get();
+		return ${{model_name_var}}->toArray();
+	}
+
+
+
+	/**
+	 * search resource.
+	 * @return Response
+	 */
+	public function index( Request $request )
+	{
+		$q = $request->all();
+
+		// CRUDS
+	 	${{model_name_var_sgl}} = new {{model_name_class}}();
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+
+		$limit = 10;
+		if ( @$crud_config->view_list_limit_default ){ $limit = $crud_config->view_list_limit_default; }	// limit default from YAML
+
+		if ( @$q['limit'] ){
+			$limit = $q['limit'];
+		}
+		if ( $limit > 100 ){
+			$limit = 100;
+		}
+		$q['limit'] = $limit;
+
+		$search_columns_loop = $this->search_columns;
+
+		$model = {{model_name_class}}::query();
+
+		// 検索
+		if ( @$q['q'] ){
+			$q['q'] = mb_convert_kana($q['q'], "s", "UTF-8");
+			$q['q'] = preg_replace("/\s+/"," ",$q['q']);
+			$q['q'] = trim( $q['q'] );
+			$q_array = preg_split("/\s/",$q['q']);
+			if ( @$q['search_column']){
+				// 特定のカラム（$q['search_column']）を検索
+				if ( count($q_array) == 1 ){	// 1.（特定のカラム）検索テキストが1つの時
+					$model->where($q['search_column'], 'LIKE', "%{$q['q']}%");
+				} else {						// 2.（特定のカラム）検索テキストがスペース区切りの複数の時
+					$model->where( function($model) use($q_array,$q){
+						foreach ($q_array as $tk => $tv) {
+							$model->whereRaw("`{$q['search_column']}` LIKE ?", "%{$tv}%");
+						}
+					});
+				}
+			}
+			// すべてのカラムを検索
+			else {
+				if ( count($q_array) == 1 ){	// 3.（すべてのカラム）検索テキストが1つの時
+					foreach ($search_columns_loop as $k => $v) {
+						$model->orWhere($k, 'LIKE', "%{$q['q']}%");
+						// $model->orwhereRaw('`title` LIKE ? and `title` LIKE ?', array("%タイトル%", "%よ%"));
+					}
+				}
+				else{							// 4.（すべてのカラム）検索テキストがスペース区切りの複数の時
+					foreach ($search_columns_loop as $k => $v) {
+						$search_column = $k;
+						$model->orWhere( function($model) use($q_array,$q,$search_column){
+							foreach ($q_array as $tk => $tv) {
+								$model->whereRaw("`{$search_column}` LIKE ?", "%{$tv}%");
+							}
+						});
+					}
+				}
+			}
+		}
+
+		// CRUDS
+	 	${{model_name_var_sgl}} = new {{model_name_class}}();
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+
+		// pagination用パラメーター
+		$pagination_params = $q;
+
+		// sort default
+		$column    = 'id';
+		$direction = 'DESC';
+		// sort parameter
+		if (isset($q['column'])){ $column = $q['column']; }
+		if (isset($q['direction'])){ $direction = $q['direction']; }
+		if ( (! isset($q['column'])) && (! isset($q['direction'])) ){
+			$column    = $crud_config->view_list_order_column;
+			$direction = $crud_config->view_list_order_direction;
+		}
+		$model = $model->orderBy($column, $direction);
+
+		// 2つ目の order by
+		if ( @$crud_config->view_list_order_column_second && @$crud_config->view_list_order_direction_second ){
+			$model = $model->orderBy($crud_config->view_list_order_column_second, $crud_config->view_list_order_direction_second);
+		}
+
+		// DB検索の実行
+		${{model_name_var}}_rows = $model->paginate( $limit );
+
+		// view
+		return view('{{prefix}}{{model_name_var}}.index', compact('{{model_name_var}}_rows','search_columns_loop','q','pagination_params', 'crud_config'));
+	}
+
+
 
 	/**
 	 * Show the form for creating a new resource.
-	 *
 	 * @return Response
 	 */
-	public function create()
+	public function create(Request $request)
 	{
-		return view('{{model_name_var}}.create');
+	 	${{model_name_var_sgl}} = new {{model_name_class}}();
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+		$_back_uri = $request->input('_back_uri');
+		return view('{{prefix}}{{model_name_var}}.edit', compact('{{model_name_var_sgl}}', '_back_uri', 'crud_config'));
 	}
+
+
 
 	/**
 	 * Store a newly created resource in storage.
@@ -38,71 +271,296 @@ class {{class}} extends Controller {
 	 */
 	public function store(Request $request)
 	{
-		${{model_name_var_sgl}} = new {{model_name_class}}();
+		$this->validate($request, $this->validation_column);
 
-		{{model_fields}}
+		$model = new {{model_name_class}}();
 
-		${{model_name_var_sgl}}->save();
+		$model->crud_set_json('yaml');
+		$crud_config = $model->get_crud_config();
 
-		return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item created successfully.');
+		$q = $request->all();
+
+		// component_fileuploader
+		if ( $model->crud_has_input_type('component_fileuploader') ){
+			$q = $this->storeComponentFileuploader($q, $crud_config);
+		}
+
+		// component_summernote
+		if ( $model->crud_has_input_type('component_summernote') ){
+			$q = $this->storeComponentSummernote($q, $crud_config);
+		}
+
+		// component_file
+		if ( $model->crud_has_input_type('component_file') ){
+			// file upload (戻り値の $q は $request->all() から添付ファイル関連を除いたもの)
+			list($q, $uploaded_flag) = $this->fileUploadonStore( $q, $model );
+		}
+
+		// component_repeatable_form
+		if ( $model->crud_has_input_type('component_repeatable_form') ){
+			$q = $this->storeComponentRepeatableForm($q, $crud_config);
+		}
+
+
+		// リレーション用のカラム ( relation__<PARAM> ) は insertデータから除外
+		foreach ($q as $k => $v) {
+			if ( preg_match("/^relation__(.+)/",$k) ){
+				unset($q[$k]);
+			}
+		}
+
+		// DB INSERT
+		$model->fill( $q );
+		$model->save();
+
+		// upload file rename
+		if ( @$uploaded_flag === true ){
+			$this->fileRenameonStore( $request, $model, $q );
+		}
+
+		// ===== relation(hasMany update)
+		$q = $request->all();
+		foreach ($q as $k => $v) {
+			if (preg_match("/^relation__(.+)/",$k,$r)){
+				$id = $model->id;
+				$crud_key = $r[1];
+				$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+				$crud_config = $model->get_crud_config();
+				$this->relationHasManyUpdate($id, $v, $model, $crud_config->table_desc->{$crud_key});
+				// unset($q[$k]);
+			}
+        }
+
+
+		$_back_uri = $request->input('_back_uri');
+		if ( $_back_uri ){
+			return redirect($_back_uri);
+		}
+		else {
+			return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item created successfully.');
+		}
 	}
+
+
 
 	/**
 	 * Display the specified resource.
-	 *
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function show($id)
+	public function show(Request $request, $id)
 	{
 		${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
-
-		return view('{{model_name_var}}.show', compact('{{model_name_var_sgl}}'));
+		$_back_uri = $request->input('_back_uri');
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+		return view('{{prefix}}{{model_name_var}}.show', compact('{{model_name_var_sgl}}', '_back_uri', 'crud_config'));
 	}
+
+
 
 	/**
 	 * Show the form for editing the specified resource.
-	 *
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function edit($id)
+	public function edit(Request $request, $id)
 	{
-		${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
-
-		return view('{{model_name_var}}.edit', compact('{{model_name_var_sgl}}'));
+	 	${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
+		$_back_uri = $request->input('_back_uri');
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+	 	return view('{{prefix}}{{model_name_var}}.edit', compact('{{model_name_var_sgl}}', '_back_uri', 'crud_config'));
 	}
+
+
+
+	/**
+	 * relation (HasMany) update
+	 *
+	 * @version 	0.2 	[fix] $form_values が [ 0 => null ] の配列の時は未選択 の処理とするよう修正
+	 *
+	 */
+	private function relationHasManyUpdate(int $id, array $form_values, $model, $crud_relation_confing)
+	{
+		// $form_values が [ 0 => null ] の配列の時は未選択
+		if (count($form_values)==1 && $form_values[0]== null){
+			$form_values = [];
+		}
+
+		$relation_method = $crud_relation_confing->relation_method;
+
+		// ピボットテーブルを指定した配列のデータで更新（すでにあるデータを書き換え）
+		$model->{$relation_method}()->sync($form_values);
+	}
+
+
 
 	/**
 	 * Update the specified resource in storage.
-	 *
-	 * @param  int  $id
-	 * @param Request $request
+	 * @param  int 			$id
+	 * @param  Request 		$request
 	 * @return Response
 	 */
 	public function update(Request $request, $id)
 	{
-		${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
+		$this->validate($request, $this->validation_column);
+		$model = {{model_name_class}}::findOrFail($id);
 
-		{{model_fields}}
+		// file upload (戻り値の $q は $request->all() から添付ファイル関連を除いたもの)
+		$q = $this->fileUploadonUpdate($request, $model, $id);
 
-		${{model_name_var_sgl}}->save();
 
-		return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item updated successfully.');
+		// crud config
+		$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+		$crud_config = $model->get_crud_config();
+
+		// component_fileuploader
+		if ( $model->crud_has_input_type('component_fileuploader') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentFileuploader($q, $crud_config, $data_already);
+		}
+
+		// component_summernote
+		if ( $model->crud_has_input_type('component_summernote') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentSummernote($q, $crud_config, $data_already);
+		}
+
+		// component_repeatable_form
+		if ( $model->crud_has_input_type('component_repeatable_form') ){
+			$q = $this->updateComponentRepeatableForm($q, $crud_config);
+		}
+
+
+		// relation(hasMany update)
+		${{model_name_var_sgl}} = (object)$q;
+		foreach (${{model_name_var_sgl}} as $k => $v) {
+			if (preg_match("/^relation__(.+)/",$k,$r)){
+				$crud_key = $r[1];
+				$this->relationHasManyUpdate($id, $v, $model, $crud_config->table_desc->{$crud_key});
+				unset($q[$k]);
+			}
+        }
+
+		// YAML edit_save_param
+		foreach ($crud_config->table_desc as $k => $v) {
+			if ( @$v->edit_save_param ){
+				${{model_name_var_sgl}}->$k = eval( "return @" . $v->edit_save_param . ";" );
+			}
+        }
+
+		// $model->fill( (array)${{model_name_var_sgl}} );
+		$model->fill( $q );
+
+		$model->save();
+		$_back_uri = $request->input('_back_uri');
+		if ( $_back_uri ){
+			return redirect($_back_uri);
+		}
+		else {
+			return redirect()->route('admin.patients.index')->with('message', 'Item updated successfully.');
+		}
 	}
+
+
 
 	/**
 	 * Remove the specified resource from storage.
-	 *
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function destroy($id)
+	public function destroy(Request $request, $id)
+	{
+        // ========== transaction ==========
+        $result_array = DB::transaction( function () use ($id) {
+
+        	$result_array = [];
+
+			// ===== model
+			$model = {{model_name_class}}::findOrFail($id);
+
+			// ===== relation(hasMany delete)
+			$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+			$crud_config = $model->get_crud_config();
+			foreach ($crud_config->table_desc as $k => $v) {
+				if ( @$v->relation != null ){
+					$relation_method = $v->relation_method;
+					$detach_result = $model->{$relation_method}()->detach();
+					array_push($result_array, "{$v->relation_pivot_model} : {$detach_result}" );
+				}
+			}
+
+			// ===== delete data
+			$delete_result = $model->delete();
+			array_push($result_array, "{{model_name_class}} : {$delete_result}" );
+
+			// ===== delete file
+			$q = $this->fileDeleteonDestroy($model);
+
+			return $result_array;
+        });
+        // ========== / transaction ==========
+		// dump($result_array);
+
+
+		$_back_uri = $request->input('_back_uri');
+		if ( $_back_uri ){
+			return redirect($_back_uri);
+		}
+		else {
+			return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item deleted successfully.');
+		}
+	}
+
+
+
+	/**
+	 * Remove the specified resource from storage.
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function destroy_ajax(Request $request, $id)
 	{
 		${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
 		${{model_name_var_sgl}}->delete();
-
-		return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item deleted successfully.');
+		return [
+			'result_code' => $result ,
+			'id'          => $id ,
+		];
 	}
 
+
+
+	/**
+	 * Remove the multiple datas from DB.
+	 *
+	 * @param  Request $request
+	 * @return Response
+	 */
+	public function dl_delete_submit(Request $request)
+	{
+		$dl = $request->dl;
+
+        // ========== transaction ==========
+        $result_array = DB::transaction( function () use ($dl) {
+			foreach ($dl as $id) {
+				// ===== delete data from model
+				$model = {{model_name_class}}::findOrFail($id);
+				$model->delete();
+	        }
+        });
+        // ========== / transaction ==========
+
+		$_back_uri = $request->input('_back_uri');
+		if ( $_back_uri ){ return redirect($_back_uri); }
+		else { return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', count($dl).' items deleted successfully.'); }
+	}
+
+
+
+
+
+
 }
+
