@@ -6,6 +6,8 @@
 	"minimum-stability": "dev",
 	"require": {
 		"php": ">=7.0.0"
+		"laravel/helpers": "*" ,
+		"symfony/yaml": "*"
 	},
 	"autoload": {
 		"psr-4": {
