@@ -193,7 +193,7 @@ class SyntaxBuilder
      */
     private function getCreateSchemaWrapper()
     {
-        return file_get_contents(__DIR__ . '/../Stubs/schema-create.stub');
+        return file_get_contents(__DIR__ . '/../stubs/schema-create.stub');
     }
 
     /**
@@ -203,7 +203,7 @@ class SyntaxBuilder
      */
     private function getChangeSchemaWrapper()
     {
-        return file_get_contents(__DIR__ . '/../Stubs/schema-change.stub');
+        return file_get_contents(__DIR__ . '/../stubs/schema-change.stub');
     }
 
     /**
@@ -272,11 +272,26 @@ class SyntaxBuilder
 
         } elseif ($type == 'view-show-content') {
 
+            // // Fields to show view
+            // $syntax = sprintf("<div class=\"form-group\">\n" .
+            //     str_repeat(' ', 21) . "<label for=\"%s\">%s</label>\n" .
+            //     str_repeat(' ', 21) . "<p class=\"form-control-static\">{{\$%s->%s}}</p>\n" .
+            //     str_repeat(' ', 16) . "</div>", strtolower($field['name']), strtoupper($field['name']), $meta['var_name'], strtolower($field['name']));
+
             // Fields to show view
-            $syntax = sprintf("<div class=\"form-group\">\n" .
-                str_repeat(' ', 21) . "<label for=\"%s\">%s</label>\n" .
-                str_repeat(' ', 21) . "<p class=\"form-control-static\">{{\$%s->%s}}</p>\n" .
-                str_repeat(' ', 16) . "</div>", strtolower($field['name']), strtoupper($field['name']), $meta['var_name'], strtolower($field['name']));
+/*
+            <table class="table table-bordered">
+                <tr>
+                    <th>id</th>
+                    <td>{{$teamuser->id}}</td>
+                </tr>
+*/
+
+            $syntax = sprintf('<tr>' ."\n" .
+                str_repeat(' ', 20) . "<th>%s <!--%s--> </th>\n" .
+                str_repeat(' ', 20) . "<td>{{\$%s->%s}}</td>\n" .
+                str_repeat(' ', 16) . '</tr>' ."\n"
+                , strtolower($field['name']), strtoupper($field['name']), $meta['var_name'], strtolower($field['name']));
 
 
         } elseif ($type == 'view-edit-content') {
@@ -334,7 +349,7 @@ class SyntaxBuilder
         }
 
         $syntax[] = '   @if($errors->has("' . $column . '"))';
-        $syntax[] = '    <span class="help-block">{{ $errors->first("' . $column . '") }}</span>';
+        $syntax[] = '    <span class="help-block text-danger">{{ $errors->first("' . $column . '") }}</span>';
         $syntax[] = '   @endif';
         $syntax[] = '</div>';
 
@@ -412,7 +427,9 @@ class SyntaxBuilder
 
         if($type == 'view-edit-content')
         {
-            $value = '{{ is_null(old("'.$column.'")) ? $'.$variable.'->'.$column.' : old("'.$column.'") }}';
+            // OLD $value = '{{ is_null(old("'.$column.'")) ? $'.$variable.'->'.$column.' : old("'.$column.'") }}';
+            // 2018_08_06 modified by econosys system
+            $value = "{{ old('" . $column ."', " . "$" . $variable . '->' . $column . ") }}";
         }
 
         switch ($field['type']) {

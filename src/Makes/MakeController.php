@@ -15,9 +15,10 @@ class MakeController
     // use AppNamespaceDetectorTrait, MakerTrait;
     use DetectsApplicationNamespace, MakerTrait;
 
-
-
     protected $scaffoldCommandObj;
+    protected $schema;
+    protected $schema_not_null;
+    protected $validation_text;
 
     function __construct(ScaffoldMakeCommand $scaffoldCommand, Filesystem $files)
     {
@@ -62,7 +63,7 @@ class MakeController
      */
     protected function compileControllerStub()
     {
-        $stub = $this->files->get(__DIR__ . '/../Stubs/controller.stub');
+        $stub = $this->files->get(__DIR__ . '/../stubs/controller.stub');
 
         $this->replaceClassName($stub, "controller")
             ->replaceModelPath($stub)
@@ -109,19 +110,36 @@ class MakeController
 
     private function replaceModelName(&$stub)
     {
-        $model_name_uc = $this->scaffoldCommandObj->getObjName('Name');
-        $model_name = $this->scaffoldCommandObj->getObjName('name');
-        $model_names = $this->scaffoldCommandObj->getObjName('names');
-        $prefix = $this->scaffoldCommandObj->option('prefix');
+        $model_name_uc    = $this->scaffoldCommandObj->getObjName('Name');
+        $model_name       = $this->scaffoldCommandObj->getObjName('name');
+        $model_names      = $this->scaffoldCommandObj->getObjName('names');
+        $prefix           = $this->scaffoldCommandObj->option('prefix');
+        $prefix           = str_replace('"','',$prefix);
+        $prefix_namespace = "\\".ucfirst($prefix);
+
+// dd($model_name_uc,$model_name,$model_names,$prefix,$prefix_namespace);
+
 
         $stub = str_replace('{{model_name_class}}', $model_name_uc, $stub);
         $stub = str_replace('{{model_name_var_sgl}}', $model_name, $stub);
         $stub = str_replace('{{model_name_var}}', $model_names, $stub);
 
-        if ($prefix != null)
+        if ($prefix != null){
             $stub = str_replace('{{prefix}}', $prefix.'.', $stub);
-        else
+            $stub = str_replace('{{prefix_namespace}}', $prefix_namespace, $stub);         // 2019_01_29
+        }
+        else {
             $stub = str_replace('{{prefix}}', '', $stub);
+            $stub = str_replace('{{prefix_namespace}}', '', $stub);
+        }
+
+        // crud_format
+        $crud_format = $this->scaffoldCommandObj->option('crud_format');
+        $crud_format = str_replace('"','',$crud_format);
+
+        if ($crud_format == null){ $crud_format = 'json'; }
+        $stub = str_replace('{{crud_format}}', $crud_format, $stub);
+
 
         return $this;
     }
@@ -141,6 +159,19 @@ class MakeController
             $schema = (new SchemaParser)->parse($schema);
         }
 
+        // 2018_08_06 add by econosys system
+        // validation ?????
+        $this->schema = $schema;
+
+        $this->schema_not_null = array_filter($schema, function($hash){
+            return ( ! (@$hash['options']['nullable'] === true) );
+        });
+
+        $this->createValidation($stub);
+        $stub = str_replace('{{validation_text}}', $this->validation_text, $stub);
+
+        // validation ?????
+
 
 
         // Create controllers fields
@@ -150,4 +181,63 @@ class MakeController
 
         return $this;
     }
+
+
+    /**
+     * Create validation
+     *
+     */
+    protected function createValidation(&$stub, $type = 'migration')
+    {
+
+$validation_text = <<< 'DOC_END'
+protected $validation_column = [
+
+DOC_END;
+
+// dd($this->schema, $this->schema_not_null);
+
+foreach ($this->schema as $k => $v) {
+
+    $validation_array = [];
+    if ( ! (@$v['options']['nullable'] == true) ){
+        array_push($validation_array, 'required');
+// $validation_text .= <<< DOC_END
+//             '{$v['name']}'  => 'required',
+
+// DOC_END;
+    }
+
+    // 2019_04_21 econosys system
+    if ( preg_match("{(datetime|date)}i", @$v['type']) ){
+        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|date'); }
+        else{ array_push($validation_array, 'date'); }
+    }
+
+    if ( preg_match("{integer}i", @$v['type']) ){
+        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|integer'); }
+        else{ array_push($validation_array, 'integer'); }
+    }
+    if ( @$v['type'] == 'decimal' or @$v['type'] == 'double' or @$v['type'] == 'float' ){
+        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|numeric'); }
+        else{ array_push($validation_array, 'numeric'); }
+    }
+
+
+    $validation_param = join('|',$validation_array);
+    $validation_text .= <<< DOC_END
+            '{$v['name']}'  => '{$validation_param}',\n
+DOC_END;
+
+}
+
+// dd($validation_text);
+
+$validation_text .= <<< 'DOC_END'
+        ];
+DOC_END;
+
+        $this->validation_text = $validation_text;
+    }
+
 }

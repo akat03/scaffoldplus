@@ -11,6 +11,7 @@ namespace Akat03\Scaffoldplus\Makes;
 
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
+use Akat03\Scaffoldplus\Migrations\SchemaParser;
 
 class MakeSeed
 {
@@ -67,10 +68,31 @@ class MakeSeed
      */
     protected function compileSeedStub()
     {
-        $stub = $this->files->get(__DIR__ . '/../Stubs/seed.stub');
+        $stub = $this->files->get(__DIR__ . '/../stubs/seed.stub');
+        $this->replaceClassName($stub)
+             ->replaceModelName($stub);
 
-        $this->replaceClassName($stub);
+        // テーブルリストをセット
+        if ($schema = $this->scaffoldCommandObj->option('schema')) {
+            $schema = (new SchemaParser)->parse($schema);
+        }
+// dump($schema);
 
+        $all_columns = '';
+        foreach ($schema as $k => $v) {
+            $sample_value = null;
+            if ( $v['type']=='text' || $v['type']=='string' ||  $v['type']=='varchar' ){
+                $sample_value = '"sample"';
+            } else {
+                $sample_value = '999';
+            }
+$all_columns .= <<< DOC_END
+            '{$v['name']}'          => {$sample_value} ,
+
+DOC_END;
+        }
+        // dd($all_columns);
+        $stub = str_replace('{{all_columns}}', $all_columns, $stub);
 
         return $stub;
     }
@@ -84,6 +106,27 @@ class MakeSeed
 
         return $this;
     }
+
+
+    private function replaceModelName(&$stub)
+    {
+        $model_name_uc = $this->scaffoldCommandObj->getObjName('Name');
+        $model_name = $this->scaffoldCommandObj->getObjName('name');
+        $model_names = $this->scaffoldCommandObj->getObjName('names');
+        $prefix = $this->scaffoldCommandObj->option('prefix');
+
+        $stub = str_replace('{{model_name_class}}', $model_name_uc, $stub);
+        $stub = str_replace('{{model_name_var_sgl}}', $model_name, $stub);
+        $stub = str_replace('{{model_name_var}}', $model_names, $stub);
+
+        if ($prefix != null)
+            $stub = str_replace('{{prefix}}', $prefix.'.', $stub);
+        else
+            $stub = str_replace('{{prefix}}', '', $stub);
+
+        return $this;
+    }
+
 
 
 }

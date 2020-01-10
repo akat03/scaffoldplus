@@ -2,8 +2,8 @@
 
 namespace Akat03\Scaffoldplus\Commands;
 
-use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Console\Command;
+use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Akat03\Scaffoldplus\Makes\MakeController;
@@ -13,246 +13,223 @@ use Akat03\Scaffoldplus\Makes\MakeModel;
 use Akat03\Scaffoldplus\Makes\MakerTrait;
 use Akat03\Scaffoldplus\Makes\MakeSeed;
 use Akat03\Scaffoldplus\Makes\MakeView;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
-class ScaffoldMakeCommand extends Command
-{
-    use DetectsApplicationNamespace, MakerTrait;
+class ScaffoldMakeCommand extends Command {
+	use DetectsApplicationNamespace, MakerTrait;
 
-    /**
-     * The console command name!
-     *
-     * @var string
-     */
-    protected $name = 'make:scaffold';
+	/**
+	 * The console command name!
+	 *
+	 * @var string
+	 */
+	protected $name = 'make:scaffoldplus';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a scaffold with bootstrap 3';
+	/**
+	 * The console command description.
+	 *
+	 * @var string
+	 */
+	protected $description = 'Create a scaffold plus';
 
+	/**
+	 * Meta information for the requested migration.
+	 *
+	 * @var array
+	 */
+	protected $meta;
 
-    /**
-     * Meta information for the requested migration.
-     *
-     * @var array
-     */
-    protected $meta;
+	/**
+	 * @var Composer
+	 */
+	private $composer;
 
-    /**
-     * @var Composer
-     */
-    private $composer;
+	/**
+	 * Views to generate
+	 *
+	 * @var array
+	 */
+	// private $views = ['index', 'create', 'show', 'edit'];
+	private $views = ['index', 'show', 'edit'];
 
+	/**
+	 * Store name from Model
+	 * @var string
+	 */
+	private $nameModel = "";
 
-    /**
-     * Views to generate
-     *
-     * @var array
-     */
-    private $views = ['index', 'create', 'show', 'edit'];
+	/**
+	 * Create a new command instance.
+	 *
+	 * @param Filesystem $files
+	 * @param Composer $composer
+	 */
+	public function __construct(Filesystem $files, Composer $composer) {
+		parent::__construct();
 
-    /**
-     * Store name from Model
-     * @var string
-     */
-    private $nameModel = "";
-
-    /**
-     * Create a new command instance.
-     *
-     * @param Filesystem $files
-     * @param Composer $composer
-     */
-    public function __construct(Filesystem $files, Composer $composer)
-    {
-        parent::__construct();
-
-
-        $this->files = $files;
-        $this->composer = $composer;
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function fire()
-    {
-        // Start Scaffold
-        $this->info('Configuring ' . $this->getObjName("Name") . '...');
-
-        // Setup migration and saves configs
-        $this->meta['action'] = 'create';
-        $this->meta['var_name'] = $this->getObjName("name");
-        $this->meta['table'] = $this->getObjName("names"); // Store table name
-
-        // Generate files
-        $this->makeMigration();
-        $this->makeSeed();
-        $this->makeModel();
-        $this->makeController();
-        $this->makeViewLayout();
-        $this->makeViews();
+		$this->files = $files;
+		$this->composer = $composer;
+	}
 
 
-    }
+	/**
+	 * Execute the console command.
+	 *
+	 * @return mixed
+	 */
+	public function fire() {
+		// Start Scaffold
+		$this->info('Configuring ' . $this->getObjName("Name") . '...');
+
+		// Setup migration and saves configs
+		$this->meta['action'] = 'create';
+		$this->meta['var_name'] = $this->getObjName("name");
+		$this->meta['table'] = $this->getObjName("names"); // Store table name
+
+		// Generate files
+		$this->makeMigration();
+		$this->makeSeed();
+		$this->makeModel();
+		$this->makeController();
+		$this->makeViewLayout();
+		$this->makeViews();
+	}
 
 
-    /**
-     * Generate the desired migration.
-     */
-    protected function makeMigration()
-    {
-        new MakeMigration($this, $this->files);
-    }
+	/**
+	 * Generate the desired migration.
+	 */
+	protected function makeMigration() {
+		new MakeMigration($this, $this->files);
+	}
 
+	/**
+	 * Generate an Eloquent model, if the user wishes.
+	 */
+	protected function makeModel() {
+		new MakeModel($this, $this->files);
+	}
 
-    /**
-     * Generate an Eloquent model, if the user wishes.
-     */
-    protected function makeModel()
-    {
-        new MakeModel($this, $this->files);
-    }
+	/**
+	 * Generate a Seed
+	 */
+	private function makeSeed() {
+		new MakeSeed($this, $this->files);
+	}
 
+	/**
+	 * Get the console command arguments.
+	 *
+	 * @return array
+	 */
+	protected function getArguments() {
+		return [
+			['name', InputArgument::REQUIRED, 'The name of the model. (Ex: Post)'],
+		];
+	}
 
-    /**
-     * Generate a Seed
-     */
-    private function makeSeed()
-    {
-        new MakeSeed($this, $this->files);
-    }
+	/**
+	 * Get the console command options.
+	 *
+	 * @return array
+	 */
+	protected function getOptions() {
+		return [
+			['schema', 's', InputOption::VALUE_REQUIRED, 'Schema to generate scaffold files. (Ex: --schema="title:string")', null],
+			['form', 'f', InputOption::VALUE_OPTIONAL, 'Use Illumintate/Html Form facade to generate input fields', false],
+			['prefix', 'p', InputOption::VALUE_OPTIONAL, 'Generate schema with prefix', false],
 
+			['extends', 'e', InputOption::VALUE_OPTIONAL, 'Generate view files with extends', false],
+			['crud_format', 'c', InputOption::VALUE_OPTIONAL, 'Generate view files with extends', false],
+			['stubs', 'stubs', InputOption::VALUE_OPTIONAL, 'Set the stub directory', false],
+		];
+	}
 
+	/**
+	 * Make a Controller with default actions
+	 */
+	private function makeController() {
 
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the model. (Ex: Post)'],
-        ];
-    }
+		new MakeController($this, $this->files);
 
+	}
 
-    /**
-     * Get the console command options.
-     *
-     * @return array
-     */
-    protected function getOptions()
-    {
-        return [
-            ['schema', 's', InputOption::VALUE_REQUIRED, 'Schema to generate scaffold files. (Ex: --schema="title:string")', null],
-            ['form', 'f', InputOption::VALUE_OPTIONAL, 'Use Illumintate/Html Form facade to generate input fields', false],
-            ['prefix', 'p', InputOption::VALUE_OPTIONAL, 'Generate schema with prefix', false]
-        ];
-    }
+	/**
+	 * Setup views and assets
+	 *
+	 */
+	private function makeViews() {
 
+		foreach ($this->views as $view) {
+			// index, create, show, edit
+			new MakeView($this, $this->files, $view);
+		}
 
-    /**
-     * Make a Controller with default actions
-     */
-    private function makeController()
-    {
+		$this->info('Views created successfully.');
 
-        new MakeController($this, $this->files);
+		$this->info('Dump-autoload...');
+		$this->composer->dumpAutoloads();
 
-    }
+		$this->info("\n==================== Add this to ./routes/web.php");
+		$this->info('Route::get("' . $this->getObjName("names") . '/dl_delete_submit", "' . $this->getObjName("Name") . 'Controller@dl_delete_submit")->name("' . $this->getObjName("names") . '.dl_delete_submit"); // multiple delete');
+		$this->info('Route::post("' . $this->getObjName("names") . '/sort_exec_ajax", "' . $this->getObjName("Name") . 'Controller@sort_exec_ajax")->name("' . $this->getObjName("names") . '.sort_exec_ajax"); // sort exec');
+		$this->info('Route::get("' . $this->getObjName("names") . '/sort", "' . $this->getObjName("Name") . 'Controller@sort")->name("' . $this->getObjName("names") . '.sort"); // sort view');
+		$this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", "' . $this->getObjName("Name") . 'Controller@destroy_ajax")->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
+		$this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", "' . $this->getObjName("Name") . 'Controller@index_ajax")->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
+		$this->info('Route::get("' . $this->getObjName("names") . '/search", "' . $this->getObjName("Name") . 'Controller@search")->name("' . $this->getObjName("names") . '.search");');
+		$this->info('Route::resource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'Controller");');
+		$this->info("==================== Add this\n");
+	}
 
+	/**
+	 * Make a layout.blade.php with bootstrap
+	 *
+	 * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+	 */
+	private function makeViewLayout() {
+		new MakeLayout($this, $this->files);
+	}
 
-    /**
-     * Setup views and assets
-     *
-     */
-    private function makeViews()
-    {
+	/**
+	 * Get access to $meta array
+	 * @return array
+	 */
+	public function getMeta() {
+		return $this->meta;
+	}
 
-        foreach ($this->views as $view) {
-            // index, create, show, edit
-            new MakeView($this, $this->files, $view);
-        }
+	/**
+	 * Generate names
+	 *
+	 * @param string $config
+	 * @return mixed
+	 * @throws \Exception
+	 */
+	public function getObjName($config = 'Name') {
 
+		$names = [];
+		$args_name = $this->argument('name');
 
-        $this->info('Views created successfully.');
+		// Name[0] = Tweet
+		$names['Name'] = str_singular(ucfirst($args_name));
+		// Name[1] = Tweets
+		$names['Names'] = str_plural(ucfirst($args_name));
+		// Name[2] = tweets
+		$names['names'] = str_plural(strtolower(preg_replace('/(?<!^)([A-Z])/', '_$1', $args_name)));
+		// Name[3] = tweet
+		$names['name'] = str_singular(strtolower(preg_replace('/(?<!^)([A-Z])/', '_$1', $args_name)));
 
-        $this->info('Dump-autoload...');
-        $this->composer->dumpAutoloads();
+		if (!isset($names[$config])) {
+			throw new \Exception("Position name is not found");
+		};
 
-        $this->info('Route::resource("'.$this->getObjName("names").'","'.$this->getObjName("Name").'Controller"); // Add this line in routes.php');
+		return $names[$config];
 
-    }
+	}
 
-
-    /**
-     * Make a layout.blade.php with bootstrap
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    private function makeViewLayout()
-    {
-        new MakeLayout($this, $this->files);
-    }
-
-
-    /**
-     * Get access to $meta array
-     * @return array
-     */
-    public function getMeta()
-    {
-        return $this->meta;
-    }
-
-
-    /**
-     * Generate names
-     *
-     * @param string $config
-     * @return mixed
-     * @throws \Exception
-     */
-    public function getObjName($config = 'Name')
-    {
-
-        $names = [];
-        $args_name = $this->argument('name');
-
-
-        // Name[0] = Tweet
-        $names['Name'] = str_singular(ucfirst($args_name));
-        // Name[1] = Tweets
-        $names['Names'] = str_plural(ucfirst($args_name));
-        // Name[2] = tweets
-        $names['names'] = str_plural(strtolower(preg_replace('/(?<!^)([A-Z])/', '_$1', $args_name)));
-        // Name[3] = tweet
-        $names['name'] = str_singular(strtolower(preg_replace('/(?<!^)([A-Z])/', '_$1', $args_name)));
-
-
-        if (!isset($names[$config])) {
-            throw new \Exception("Position name is not found");
-        };
-
-
-        return $names[$config];
-
-
-    }
-
-
-    public function handle()
-    {
-        return $this->fire();
-    }
-
+	public function handle() {
+		return $this->fire();
+	}
 
 }

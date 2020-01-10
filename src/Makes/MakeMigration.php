@@ -68,7 +68,7 @@ class MakeMigration {
      */
     protected function compileMigrationStub()
     {
-        $stub = $this->files->get(__DIR__.'/../Stubs/migration.stub');
+        $stub = $this->files->get(__DIR__.'/../stubs/migration.stub');
 
         $this->replaceClassName($stub)
             ->replaceSchema($stub)
@@ -120,6 +120,7 @@ class MakeMigration {
     protected function replaceSchema(&$stub, $type='migration')
     {
         if ($schema = $this->scaffoldCommandObj->option('schema')) {
+// dd($schema);
             $schema = (new SchemaParser)->parse($schema);
         }
 
