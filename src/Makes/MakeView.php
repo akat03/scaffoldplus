@@ -121,7 +121,7 @@ class MakeView
     {
 
         // stub directory
-        $stub_dir = __DIR__ . '/../stubs/';
+        $stub_dir = __DIR__ . '/../Stubs/';
 
         // command line option 'stubs'
         $option_stubs = $this->scaffoldCommandObj->option('stubs');
@@ -132,7 +132,7 @@ class MakeView
         // dump( "Scaffolding stubs DIR: " . $option_stubs );
 
 
-        // $stub = $this->files->get(__DIR__ . '/../stubs/html_assets/'.$nameView.'.stub');
+        // $stub = $this->files->get(__DIR__ . '/../Stubs/html_assets/'.$nameView.'.stub');
         $stub = $this->files->get($stub_dir . 'html_assets/'.$nameView.'.stub');
 
         if($nameView == 'show'){

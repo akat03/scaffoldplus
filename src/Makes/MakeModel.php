@@ -42,7 +42,7 @@ class MakeModel
 
         // Make: ./app/[MODEL].php
         $path = $this->getPath($name, 'model');
-        $stub = $this->files->get(__DIR__ . '/../stubs/model.stub');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/model.stub');
         $this->replaceName($stub)
              ->replaceModelPath($stub)
              ->replaceModelName($stub)
@@ -57,7 +57,7 @@ class MakeModel
 
         // Make: ./app/CrudTrait.php
         $path = $this->getPath('CrudTrait', 'model');
-        $stub = $this->files->get(__DIR__ . '/../stubs/CrudTrait.stub');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/CrudTrait.stub');
         $this->replaceName($stub)
              ->replaceSchemaShow($stub);
         // put if file is not exists.
@@ -143,7 +143,7 @@ class MakeModel
         $json['table_desc']['id'] = $h;
 
 
-        // $stub_parts = $this->files->get(__DIR__ . '/../stubs/ModelJson.stub');
+        // $stub_parts = $this->files->get(__DIR__ . '/../Stubs/ModelJson.stub');
         foreach ($this->schemaArray as $v) {
             // dd($v);
             $view_list_title = ucfirst($v['name']);
