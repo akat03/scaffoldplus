@@ -1,0 +1,1127 @@
+<?php
+
+/**
+ * Trait : CrudControllerTrait
+ *
+ * @version 0.02  [fix] fileUploadonStore() の 引数を変更
+ * @version 0.021 [fix] $v->input_type が undefined の時のエラー修正
+ * @version 0.03  [fix] updateComponentSummernote()  summernote用ファイルアップロードパラメーター「files」を削除するよう修正
+ * @version 0.04  [fix] multifile コンポーネント追加
+ * @version 0.05  [fix] summernote コンポーネントのファイルアップロード処理修正
+ * @version 0.06  [fix] summernote HTML構造崩れに対応
+ * @version 0.07  [fix] summernote を DOM 処理する時に html,body タグを自動孵化するよう変更
+ * @version 0.071 [add] 検索機能 setSearchParam() マージ
+ * @version 0.08  [fix] fileuploader 同名のファイルを 削除とアップロードを同時に行った時の不具合修正
+ *
+ */
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+trait CrudControllerTrait
+{
+
+    /**
+     * リレーションに対応した検索パラメーター設定
+     *
+     * @param                   $q
+     * @param                   $model
+     * @return   void
+     *
+     */
+    private function setSearchParam($q, $model, $search_columns_loop=[] )
+    {
+        // 検索
+        if ( @$q['q'] ){
+            $q['q'] = mb_convert_kana($q['q'], "s", "UTF-8");
+            $q['q'] = preg_replace("/\s+/"," ",$q['q']);
+            $q['q'] = trim( $q['q'] );
+            $q_array = preg_split("/\s/",$q['q']);
+// dump($q_array);
+
+            // A.特定のカラム（$q['search_column']）を検索
+            if ( @$q['search_column']){
+                // 1.（特定のカラム）検索テキストが1つの時
+                if ( count($q_array) == 1 ){
+                    // 1-1: リレーションを検索に行く場合（ Example: customer.name ）
+                    if ( preg_match("/(\w+)\.(\w+)/",$q['search_column'],$r) ){
+                        // dd($r);
+                        $_search_table_name  = $r[1]; // $r[1] : テーブル名
+                        $_search_column_name = $r[2]; // $r[2] : カラム名
+                        $model->whereHas($_search_table_name, function ($query) use ($q,$_search_column_name) { // リレーション名 user を渡す
+                            $query->where($_search_column_name, 'LIKE', "%{$q['q']}%");
+                        });
+                    }
+                    // 1-2: 対象モデルを検索に行く場合
+                    else { $model->where($q['search_column'], 'LIKE', "%{$q['q']}%"); }
+                }
+                // 2.（特定のカラム）検索テキストがスペース区切りの複数の時
+                else {
+                    // 2-1: リレーションを検索に行く場合
+                    if ( preg_match("/(\w+)\.(\w+)/",$q['search_column'],$r) ){
+                        $_search_table_name  = $r[1]; // $r[1] : テーブル名
+                        $_search_column_name = $r[2]; // $r[2] : カラム名
+                        $model->where( function($model) use($q_array,$q,$_search_table_name,$_search_column_name){
+                            foreach ($q_array as $tk => $tv) {
+                                $model->whereHas($_search_table_name, function ($query) use ($tv,$_search_column_name) {    // リレーション名 user を渡す
+                                    $query->where($_search_column_name, 'LIKE', "%{$tv}%");
+                                });
+                            }
+                        });
+                    }
+                    // 2-2: 対象モデルを検索に行く場合
+                    else{
+                        $model->where( function($model) use($q_array,$q){
+                            foreach ($q_array as $tk => $tv) {
+                                $model->whereRaw("`{$q['search_column']}` LIKE ?", "%{$tv}%");
+                            }
+                        });
+                    }
+                }
+            }
+            // B.すべてのカラムを検索
+            else {
+                if ( count($q_array) == 1 ){    // 3.（すべてのカラム）検索テキストが1つの時
+                    foreach ($search_columns_loop as $k => $v) {
+                        $model->orWhere($k, 'LIKE', "%{$q['q']}%");
+                        // $model->orwhereRaw('`title` LIKE ? and `title` LIKE ?', array("%タイトル%", "%よ%"));
+                    }
+                }
+                else{                           // 4.（すべてのカラム）検索テキストがスペース区切りの複数の時
+                    foreach ($search_columns_loop as $k => $v) {
+                        $search_column = $k;
+                        $model->orWhere( function($model) use($q_array,$q,$search_column){
+                            foreach ($q_array as $tk => $tv) {
+                                $model->whereRaw("`{$search_column}` LIKE ?", "%{$tv}%");
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+    }
+
+
+
+
+    /**
+     * データ新規作成 保存時のファイルアップロード処理
+     *
+     * @return   array       $q
+     * @return   boolean     $uploaded_flag
+     *
+     */
+    // private function fileUploadonStore( Request $request, $model )
+    private function fileUploadonStore($q, $model)
+    {
+        $return_hash = [];
+        // $q = $request->all();
+        $uploaded_flag = false;
+
+        // crud
+        $model->crud_set_json('yaml');
+        $crud_config = $model->get_crud_config();
+
+        $id = '---tmp---';
+        foreach ($crud_config->table_desc as $k => $v) {
+            if (@$v->input_type == 'component_file') {
+                // dump($v);
+                if (@$q[$k . '__attach']) {
+                    $ext = pathinfo($q[$k . '__attach']->getClientOriginalName(), PATHINFO_EXTENSION); // originalName から拡張子を取得
+                    $store_file_name = str_replace("{id}", $id, $v->file_store_base_name) . ".{$ext}"; // ファイル名セット
+                    $q[$k . '__attach']->storeAs($v->file_store_dir, $store_file_name, $v->file_store_disk); // パス名、ファイル名、ディスク名
+                    $tmp = [
+                        'disk' => $v->file_store_disk,
+                        'dir' => $v->file_store_dir,
+                        'file_name' => $store_file_name,
+                        'original_name' => $q[$k . '__attach']->getClientOriginalName(),
+                        'size' => $q[$k . '__attach']->getSize(),
+                        // 'size_name'     => \ByteUnits\bytes( $q[$k.'__attach']->getSize() )->format() ,
+                    ];
+                    $return_hash[$k] = $tmp;
+                    unset($q[$k . '__attach']); // $q パラメーターから削除
+                    $q[$k] = json_encode($tmp); // $q パラメーターに追加
+                    $uploaded_flag = true;
+                }
+            }
+        }
+        return [$q, $uploaded_flag];
+    }
+
+    /**
+     * データ新規作成のDB登録後のIDを受けて、アップロードファイル名、DBカラム内のファイル名変更
+     *
+     * @return   array       $q
+     * @return   boolean     $uploaded_flag
+     *
+     */
+    private function fileRenameonStore(Request $request, $model, $q)
+    {
+
+        // ファイル自体をリネーム
+        foreach ($q as $k => $v) {
+            if (preg_match('/\{"disk":/', $v)) {
+                $json = json_decode($v, true);
+                // dd($json);
+
+                // rename : file_name
+                $new_file_name = str_replace("---tmp---", $model->id, $json['file_name']);
+                $disk = \Storage::disk($json['disk'])->move("{$json['dir']}/{$json['file_name']}", "{$json['dir']}/{$new_file_name}");
+
+                // rename : db
+                $json['file_name'] = $new_file_name;
+                $model->fill([
+                    $k => json_encode($json),
+                ])->save();
+            }
+        }
+// dd($request->all(), $model, $q);
+        // DBデータを更新
+    }
+
+    /**
+     * データ更新 時のファイルアップロード処理
+     *
+     * @return   array       $q
+     *
+     */
+    private function fileUploadonUpdate(Request $request, $model, $id)
+    {
+        // OFF $return_hash = [];
+        $q = $request->all();
+
+        // crud
+        $model->crud_set_json('yaml');
+        $crud_config = $model->get_crud_config();
+
+        foreach ($crud_config->table_desc as $k => $v) {
+            // dump($v);
+            if (@$v->input_type == 'component_file') {
+                // dump($v);
+                if (@$q[$k . '__attach']) {
+                    // dd($q[$k.'__attach']);
+                    // ファイル保存
+                    $ext = pathinfo($q[$k . '__attach']->getClientOriginalName(), PATHINFO_EXTENSION); // originalName から拡張子を取得
+                    $store_file_name = str_replace("{id}", $id, $v->file_store_base_name) . ".{$ext}"; // ファイル名セット
+                    $q[$k . '__attach']->storeAs($v->file_store_dir, $store_file_name, $v->file_store_disk); // パス名、ファイル名、ディスク名
+                    $tmp = [
+                        'disk' => $v->file_store_disk,
+                        'dir' => $v->file_store_dir,
+                        'file_name' => $store_file_name,
+                        'original_name' => $q[$k . '__attach']->getClientOriginalName(),
+                        'size' => $q[$k . '__attach']->getSize(),
+                        // 'size_name'     => \ByteUnits\bytes( $q[$k.'__attach']->getSize() )->format() ,
+                    ];
+                    // OFF $return_hash[$k] = $tmp;
+
+                    unset($q[$k . '__attach']); // $q パラメーターから削除
+                    unset($q[$k . '__edit_flag']); // $q パラメーターから削除
+
+                    $q[$k] = json_encode($tmp); // $q パラメーターに追加
+                } elseif (@$q[$k . '__edit_flag'] === 'delete') {
+                    unset($q[$k . '__edit_flag']); // $q パラメーターから削除
+                    $q[$k] = null; // $q パラメーターにnull追加
+                    // delete file from disk
+                    $tmp_model_json = json_decode($model->{$k}, true);
+                    $disk = \Storage::disk($tmp_model_json['disk'])->delete("{$tmp_model_json['dir']}/{$tmp_model_json['file_name']}");
+                } elseif (@$q[$k . '__edit_flag'] === 'notedit') {
+                    unset($q[$k . '__edit_flag']); // $q パラメーターから削除
+                }
+            }
+        }
+        return $q;
+    }
+
+
+
+    /**
+     * データ削除 時のファイル削除処理
+     *
+     * @return   array       $q
+     *
+     * @version  0.2        削除したファイル数を返すように変更
+     *
+     */
+    private function fileDeleteonDestroy($model)
+    {
+        $deleted_file_no = 0;
+        // dd( $model );
+        foreach ($model->toArray() as $k => $v) {
+            if (preg_match('/\{"disk":/', $v)) {
+                $tmp_model_json = json_decode($v, true);
+                // ファイルが1つの場合
+                if (isset($tmp_model_json['disk'])){
+                    $disk = \Storage::disk($tmp_model_json['disk'])->delete("{$tmp_model_json['dir']}/{$tmp_model_json['file_name']}");
+                }
+                // ファイルが服の場合
+                elseif ( isset($tmp_model_json[0]) ){
+                    foreach ($tmp_model_json as $k => $v) {
+                        // dump( "{$v['dir']}/{$v['file_name']}" );
+                        $result = \Storage::disk($v['disk'])->delete("{$v['dir']}/{$v['file_name']}");
+                        // dump( $result );
+                        if ( $result == true ){ $deleted_file_no++; }
+                    }
+                }
+            }
+        }
+        return $deleted_file_no;
+    }
+
+
+
+    /**
+     * コンポーネント「component_summernote」 で入力エリアに画像がある時ファイル保存
+     *
+     * @param   string      $note_content       SummerNoteのテキストエリアの内容（画像はbase64で渡ってくる）
+     * @param   array       $crud_config        Crud Config
+     * @param   string      $k                  テーブル名
+     */
+    private function summernoteFileSave($note_content, $crud_config, $k)
+    {
+        if ($note_content==null){ return [null,null]; }
+
+        // 保存ディスク設定読み込み
+        $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
+        $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
+        $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+
+        // フォームデータ読み込み
+        $content = $note_content;
+
+        $dom = new \DomDocument();
+
+        // $dom->loadHtml($content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        libxml_use_internal_errors( true );  // エラー抑制
+
+        // Domに喰わせるために html,body タグを追加する
+        $content_with_html_body = '<html><body>'.$content.'</body></html>';
+
+        $dom->loadHtml(mb_convert_encoding($content_with_html_body, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();  // エラー抑制
+
+        $images = $dom->getElementsByTagName('img');
+
+        $files_info = [];
+        foreach ($images as $img_k => $img) {
+            $data = $img->getAttribute('src');
+
+            // data:image/png;base64 のように data:image で始まっている場合のみ処理する
+            if ( ! preg_match("{^data:image/}",$data) ){ continue; }
+
+            list($type, $data) = explode(';', $data);
+            list(, $data) = explode(',', $data);
+            $data = base64_decode($data);
+
+            // ファイル名
+            $dt = \Carbon\Carbon::now();
+            $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . '.png';
+
+            // ファイル保存
+            // file_put_contents($path, $data);
+            \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $data);
+
+            // ファイル情報取得
+            $finfo = [
+                'disk'          => $file_store_disk ,
+                'dir'           => $file_store_dir ,
+                'file_name'     => $image_name ,
+                'original_name' => $img->getAttribute('data-filename') ,
+                'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+            ];
+            array_push( $files_info, $finfo );
+
+            $img->removeAttribute('src');
+            $img->removeAttribute('data-filename');
+
+            // $img->setAttribute('src', $image_name);
+            $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
+            $img->removeAttribute('style');         // style を削除
+            // dump( $img->getAttribute('src') );
+            // dd( $file_store_dir, $image_name, url(\Storage::disk($file_store_disk)->url("/{$file_store_dir}/{$image_name}")) );
+        }
+
+        // フォームの値を戻す
+        $note_content = html_entity_decode($dom->saveHTML());
+        // dump( $k,$note_content );
+
+        // デバッグ用
+        // $note_content = $content;
+        // $note_content = str_replace("<p><br></p>","",$note_content);
+
+        // dd( $content,$note_content );
+
+        // 保存したファイル情報をセット
+        $files_info_json = "";
+        if ( $files_info ){
+            $files_info_json = json_encode($files_info);
+        }
+
+        // 先ほどつけた html,body を削除
+        $note_content = preg_replace("{^<html><body>}", "", $note_content);
+        $note_content = preg_replace("{</body></html>\n$}", "", $note_content);
+
+        return [$note_content,$files_info_json];
+        // {"disk":"public","dir":"testfile","file_name":"4_01.png","original_name":"2019_04_03\u8cea\u554f.png","size":846553}
+        // dd($files_info);
+    }
+
+
+
+    /**
+     * コンポーネント「component_summernote」 で UPDATE時に入力エリアから画像が削除されたかどうかをチェックし、削除されている場合はディスクから削除
+     *
+     * @param   string      $note_content       SummerNoteのテキストエリアの内容（画像はbase64で渡ってくる）
+     * @param   array       $crud_config        Crud Config
+     * @param   string      $k                  テーブル名
+     * @param   DB Model    $data_already       変更前のDBデータ
+     *
+     */
+    private function summernoteFileCheckAndDelete($note_content, $crud_config, $k, $data_already)
+    {
+// dd( $data_already );
+        // 保存ディスク設定読み込み
+        $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
+        $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
+        $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+
+        $file_already_json_array = json_decode($data_already[$file_store_column],true);
+
+        // jsonがからの場合は戻る
+        if ( $file_already_json_array == null ){
+            // dump( $file_already_json_array );
+            return;
+        }
+
+        // dump( $note_content, $crud_config, "summernoteカラム: ".$k, "summernoteの画像保存カラム: ".$file_store_column, $data_already[$file_store_column],$file_already_json_array );
+
+        $file_update_json_array = [];
+        foreach ($file_already_json_array as $fk => $fv) {
+// dump( $fv );
+            $file_already_url = url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$fv['file_name']}"));
+            $pattern = '/' . preg_quote($file_already_url, '/') . '/';
+            // dump( $fv,$file_already_url );
+            if ( ! preg_match($pattern, $note_content) ){
+                // dump( $pattern, $note_content );
+                // dump( "[{$fk}] 番目の画像データ（{$fv['file_name']}）を削除。",$fv );
+                // ===== x番目の画像の削除
+                $result = \Storage::disk($file_store_disk)->delete("{$file_store_dir}/{$fv['file_name']}");
+            }
+            else {
+                array_push($file_update_json_array,$fv);
+            }
+        }
+
+        $file_update_json = json_encode($file_update_json_array);
+
+        return [$note_content,$file_update_json];
+
+    }
+
+
+
+    /**
+     * コンポーネント「component_summernote」 ファイル保存
+     *
+     * Summernote で 新規投稿保存時に画像ファイルがあった時の処理
+     */
+    private function storeComponentSummernote($q, $crud_config)
+    {
+        foreach ($q as $k => $v) {
+
+            if (preg_match("/^component_summernote/", @$crud_config->table_desc->{$k}->input_type, $r) && $q[$k] ) {
+
+                // ● summernoteの内容から画像を取り出す
+                list($note_content,$files_info_json) = $this->summernoteFileSave($q[$k], $crud_config, $k);
+                // 画像のbase64をファイル名に変換したものをセット
+                $q[$k] = $note_content;
+                // summernote用画像保存カラムにデータをセット
+                $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                $q[$file_store_column] = $files_info_json;
+
+
+                // // 保存ディスク設定読み込み
+                // $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
+                // $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
+                // $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+
+                // // フォームデータ読み込み
+                // $content = $q[$k];
+                // // dd( $content );
+
+                // // $feature=$request->input('feature');
+                // // dd($request->all(),$content,$feature);
+
+                // $dom = new \DomDocument();
+
+                // // $dom->loadHtml($content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                // $dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+                // $images = $dom->getElementsByTagName('img');
+
+                // $files_info = [];
+                // foreach ($images as $img_k => $img) {
+                //     $data = $img->getAttribute('src');
+                //     list($type, $data) = explode(';', $data);
+                //     list(, $data) = explode(',', $data);
+                //     $data = base64_decode($data);
+
+                //     // ファイル名
+                //     $dt = \Carbon\Carbon::now();
+                //     $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . '.png';
+
+                //     // ファイル保存
+                //     // file_put_contents($path, $data);
+                //     \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $data);
+
+                //     // ファイル情報取得
+                //     $finfo = [
+                //         'disk'          => $file_store_disk ,
+                //         'dir'           => $file_store_dir ,
+                //         'file_name'     => $image_name ,
+                //         'original_name' => $img->getAttribute('data-filename') ,
+                //         'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+                //     ];
+                //     array_push( $files_info, $finfo );
+
+                //     $img->removeAttribute('src');
+                //     $img->removeAttribute('data-filename');
+
+                //     // $img->setAttribute('src', $image_name);
+                //     $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
+                //     $img->removeAttribute('style');         // style を削除
+                //     dump( $img->getAttribute('src') );
+
+                //     // dd( $file_store_dir, $image_name, url(\Storage::disk($file_store_disk)->url("/{$file_store_dir}/{$image_name}")) );
+                // }
+
+                // // フォームの値を戻す
+                // $q[$k] = html_entity_decode($dom->saveHTML());
+                // // dump( $k,$q[$k] );
+
+                // // デバッグ用
+                // // $q[$k] = $content;
+                // // $q[$k] = str_replace("<p><br></p>","",$q[$k]);
+
+                // // dd( $content,$q[$k] );
+
+                // // 保存したファイル情報をセット
+                // if ( $files_info ){
+                //     $q[$file_store_column] = json_encode($files_info);
+                // }
+                // // {"disk":"public","dir":"testfile","file_name":"4_01.png","original_name":"2019_04_03\u8cea\u554f.png","size":846553}
+                // // dd($files_info);
+            }
+// dump($q);
+
+        }
+// dd($q);
+
+        unset( $q['files']);
+        return $q;
+    }
+
+
+
+    /**
+     * コンポーネント「component_summernote」 データ更新時のファイル保存
+     *
+     * Summernote で 更新時時に画像ファイルがあった時の処理
+     */
+    private function updateComponentSummernote($q, $crud_config, $data_already)
+    {
+        foreach ($q as $k => $v) {
+
+            if (preg_match("/^component_summernote/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+
+                // ● 1. summernoteの内容から削除された画像を割り出し、ファイルを削除する
+                list($note_content,$files_update_json) = $this->summernoteFileCheckAndDelete($q[$k], $crud_config, $k, $data_already);
+// dd( $note_content );
+                // summernote用画像保存カラムにデータをセット
+                $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                $q[$file_store_column] = $files_update_json;
+                // dd( $files_update_json );
+
+                // ● 2.summernoteの内容から画像を取り出す
+                // dd( $q[$k], $crud_config, $k );
+                list($note_content,$files_info_json) = $this->summernoteFileSave($q[$k], $crud_config, $k);
+// dd( $q[$k], $note_content );
+             // 画像のbase64をファイル名に変換したものをセット
+                $q[$k] = $note_content;
+
+                // 新規登録された画像がある場合は既存のデータに追加
+                if ( $files_info_json ){
+                    $files_update_json_array = json_decode($files_update_json,true);
+                    $files_info_json_array   = json_decode($files_info_json,true);
+
+                    // 結合した joined_array を作成
+                    $joined_array = $files_update_json_array;
+                    if ($joined_array==null){ $joined_array = []; }
+                    foreach ($files_info_json_array as $fija_v) {
+                        array_push($joined_array,$fija_v);
+                    }
+                    $files_joined_json = json_encode($joined_array);
+                    // dd( $files_update_json_array );
+
+                    // summernote用画像保存カラムにデータをセット
+                    $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                    $q[$file_store_column] = $files_joined_json;
+                }
+
+
+            }
+
+        }
+
+        // Delete summer note upload param name="files"
+        unset( $q['files']);
+
+        return $q;
+    }
+
+
+
+
+
+
+    /**
+     * コンポーネント「マルチファイル」 データ新規登録時のファイル保存
+     *
+     * マルチファイル　更新時の処理
+     *
+     */
+    private function storeComponentMultifile($q, $crud_config)
+    {
+        // dd($q, $crud_config, $data_already);
+        foreach ($q as $k => $v) {
+            // dump($k);
+
+            // if (preg_match("/^component_multifile/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+            if (preg_match("/(.+)__dropzone_files$/", $k, $r)) {
+                $form_name = $r[1];
+                // dd( $form_name, $k, $v );
+
+                // 保存ディスク設定読み込み
+                $file_store_disk   = $crud_config->table_desc->{$form_name}->file_store_disk;
+                $file_store_dir    = $crud_config->table_desc->{$form_name}->file_store_dir;
+                $file_store_column = $crud_config->table_desc->{$form_name}->file_store_column;
+// dd($file_store_disk,$file_store_dir,$file_store_column);
+
+                // 画像データ読み込み
+// dd('DBカラム名'.$k . '  フォームパラメーター名' . $k . '__dropzone_files' );
+                $content = $q[$k];
+                // $file_store_column = $k;
+
+                $files_info = [];
+                foreach ($v as $vk => $vv) {
+                    list($en_file_name, $ja_file_name, $tmp_file_fullpath_name) = explode("\t", $vv);
+// dd($en_file_name, $ja_file_name, $tmp_file_fullpath_name);
+                    // list(, $data) = explode(',', $data);
+                    // $data = base64_decode($data);
+
+                    // ファイル名
+                    $dt = \Carbon\Carbon::now();
+                    $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . '.png';
+
+                    // ファイル保存
+                    $d = file_get_contents( $tmp_file_fullpath_name );
+                    \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $d);
+
+
+                    // ファイル情報取得
+                    $finfo = [
+                        'disk'          => $file_store_disk ,
+                        'dir'           => $file_store_dir ,
+                        'file_name'     => $image_name ,
+                        'original_name' => $ja_file_name ,
+                        'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+                    ];
+                    array_push( $files_info, $finfo );
+                }
+
+                // 保存したファイル情報を更新（削除されたものは削除）(追加されたものは追加)
+                if ( $files_info ){
+                    $q[$file_store_column] = json_encode($files_info);
+                    dump( $file_store_column, $q[$file_store_column] );
+                }
+
+                //  "img_html_name_1__dropzone_files" => array:3 [▶] を削除する
+                unset( $q["{$file_store_column}__dropzone_files"] );
+            }
+        }
+        return $q;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * コンポーネント「マルチファイル」 データ更新時のファイル保存
+     *
+     * マルチファイル　更新時の処理
+     */
+    private function updateComponentMultifile($q, $crud_config, $data_already)
+    {
+        // dd($q, $crud_config, $data_already);
+        foreach ($q as $k => $v) {
+            // dump($k);
+
+            // if (preg_match("/^component_multifile/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+            if (preg_match("/(.+)__dropzone_files$/", $k, $r)) {
+                $form_name = $r[1];
+                dd( $form_name, $k, $v );
+
+                // 保存ディスク設定読み込み
+                $file_store_disk   = $crud_config->table_desc->{$form_name}->file_store_disk;
+                $file_store_dir    = $crud_config->table_desc->{$form_name}->file_store_dir;
+                $file_store_column = $crud_config->table_desc->{$form_name}->file_store_column;
+
+                // 画像データ読み込み
+                dd('DBカラム名'.$k . '  フォームパラメーター名' . $k . '__dropzone_files' );
+                $content = $q[$k];
+
+                $dom = new \DomDocument();
+                $dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                $images = $dom->getElementsByTagName('img');
+
+                $files_info = [];
+
+                foreach ($images as $img_k => $img) {
+                    $data = $img->getAttribute('src');
+                    // 1. アップロード済ファイルの処理
+                    if ( ! preg_match("/;/", $data) ){
+                        // 既存のファイルデータは
+                        $data_already_json_array = (array)json_decode( $data_already->{$file_store_column}, true );
+                        $img_filename = basename($data);
+                        // dump( $img_filename , $data_already_json_array );
+                        // ハッシュの配列から "file_name"が"20190415_703804161.png" のデータを取得
+                        $selected_data = array_filter($data_already_json_array, function($hash) use ($img_filename){
+                            return ( @$hash['file_name'] === $img_filename );
+                        });
+                        if ( count($selected_data) > 0 ){
+                            $finfo = current($selected_data);   // 配列の先頭の要素を取得
+                            array_push( $files_info, $finfo );
+                        }
+                    }
+                    // 2. 新規ファイルの処理
+                    elseif ( preg_match("/;/",$data) ){
+                        list($type, $data) = explode(';', $data);
+                        list(, $data) = explode(',', $data);
+                        $data = base64_decode($data);
+
+                        // ファイル名
+                        $dt = \Carbon\Carbon::now();
+                        $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . '.png';
+
+                        // ファイル保存
+                        // file_put_contents($path, $data);
+                        \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $data);
+
+                        // ファイル情報取得
+                        $finfo = [
+                            'disk'          => $file_store_disk ,
+                            'dir'           => $file_store_dir ,
+                            'file_name'     => $image_name ,
+                            'original_name' => $img->getAttribute('data-filename') ,
+                            'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+                        ];
+                        array_push( $files_info, $finfo );
+
+                        $img->removeAttribute('src');
+                        $img->removeAttribute('data-filename');
+
+                        // $img->setAttribute('src', $image_name);
+                        $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
+
+                    }
+                }
+
+                // フォームの値を戻す
+                $q[$k] = $dom->saveHTML();
+
+                // 保存したファイル情報を更新（削除されたものは削除）(追加されたものは追加)
+                if ( $files_info ){
+                    $q[$file_store_column] = json_encode($files_info);
+                }
+            }
+        }
+        unset( $q['files']);
+        return $q;
+    }
+
+
+
+
+
+    /**
+     * ========== コンポーネント「fileuploader」 データ新規登録時のファイル保存
+     *
+     * マルチファイル　新規登録の処理
+     */
+    private function storeComponentFileuploader($q, $crud_config)
+    {
+        // dd($q, $crud_config);
+        // foreach ($q as $k => $v) {
+        foreach ($crud_config->table_desc as $k => $v) {
+            if (preg_match("/^component_fileuploader$/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+                $form_name = $crud_config->table_desc->{$k}->name;
+
+                // 値がない時はスキップ
+                if ( ! @$q[$form_name] ){
+                    unset( $q["fileuploader-list-{$form_name}"] );  //  fileuploader-list-[カラム名] を削除する
+                    continue;
+                }
+                // dd( $form_name);
+
+                // 保存ディスク設定読み込み
+                $file_store_disk   = $crud_config->table_desc->{$form_name}->file_store_disk;
+                $file_store_dir    = $crud_config->table_desc->{$form_name}->file_store_dir;
+                $file_store_column = @$crud_config->table_desc->{$form_name}->file_store_column;
+                if (! $file_store_column){ $file_store_column = $form_name; }
+
+                // フォームの値
+                $form_value = $q[$form_name];
+                // dd( $form_value );
+
+                // 画像データ読み込み
+// dd('DBカラム名'.$k . '  フォームパラメーター名' . $k . '__dropzone_files' );
+                $content = $q[$k];
+                // $file_store_column = $k;
+
+                $files_info = [];
+
+
+                // data-fileuploader-limit="1" の 時は 配列ではなく、直接 UploadedFile オブジェクトがセットされるので配列にする
+                if (is_object($form_value)){
+                    if ( get_class($form_value) == 'Illuminate\Http\UploadedFile' ){
+                        // dd( 'UploadedFileオブジェクトです' );
+                        $form_value_object = $form_value;
+                        $form_value = [ $form_value_object ];
+                    }
+                }
+
+                if ( is_array($form_value) ){
+                    foreach ($form_value as $vk => $vv) {
+
+                        // ファイル名
+                        $dt = \Carbon\Carbon::now();
+                        $ext = $vv->getClientOriginalExtension();
+                        $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . ".{$ext}";    // 保存ファイル名
+                        $ja_file_name = $vv->getClientOriginalName();                              // 日本語ファイル名
+
+                        // ファイル保存
+                        $vv->storeAs( $file_store_dir, $image_name, $file_store_disk );
+                        // $vv->storeAs( \Storage::disk($file_store_disk)->path("{$file_store_dir}"), $image_name, $file_store_disk );
+                        // dd( \Storage::disk($file_store_disk)->path("{$file_store_dir}"), $image_name );
+
+                        // $d = file_get_contents( $vv->realPath );
+                        // \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $d);
+
+                        // ファイル情報取得
+                        $finfo = [
+                            'disk'          => $file_store_disk ,
+                            'dir'           => $file_store_dir ,
+                            'file_name'     => $image_name ,
+                            'original_name' => $ja_file_name ,
+                            'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+                        ];
+                        array_push( $files_info, $finfo );
+                    }
+                }
+
+
+                // 保存したファイル情報を更新（削除されたものは削除）(追加されたものは追加)
+                if ( $files_info ){
+                    $q[$file_store_column] = json_encode($files_info);
+                    // dd( $file_store_column, $q[$file_store_column] );
+                }
+
+                //  fileuploader-list-[カラム名] を削除する
+                unset( $q["fileuploader-list-{$form_name}"] );
+            }
+        }
+        return $q;
+    }
+
+
+
+    /**
+     * コンポーネント「component_fileuploader」 データ更新時のファイル保存
+     *
+     * component_fileuploader で 画像ファイルの更新処理
+     *
+     * @version     0.2         $store_dir_override     ここに値が設定してあると、新規ファイル保存場所は yaml設定を無視して、既に登録済みの先頭のファイルのディレクトリを優先して保存する
+     * @version     0.3         削除した結果ファイル数が 0 になった場合明示的に null を返すよう修正
+     *
+     */
+    private function updateComponentFileuploader($q, $crud_config, $data_already, string $store_dir_override='no')
+    {
+        // dd($q, $crud_config, $data_already);
+
+
+        foreach ($crud_config->table_desc as $k => $v) {
+            if (preg_match("/^component_fileuploader$/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+                $form_name = $crud_config->table_desc->{$k}->name;
+
+        // foreach ($q as $k => $v) {
+        //     if (preg_match("/^component_fileupload/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+        //         $form_name = $crud_config->table_desc->{$k}->name;
+
+                // 保存ディスク設定読み込み
+                $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
+                $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
+                $file_store_column = @$crud_config->table_desc->{$k}->file_store_column;
+
+                // ファイル保存ディレクトリをセット（デフォルトはyamlに記述してあるディレクトリ名。引数で $store_dir_override=yes があると、既に登録済みの先頭のファイルのディレクトリを優先 ）
+                if ($store_dir_override == 'yes'){
+                    $data_already_hash = json_decode( $data_already[$k], true );
+                    // dump( 'store_dir_overrideが yes なので 既に登録済みの先頭のファイルのディレクトリをセットします。', $data_already[$k], $data_already_hash );
+                    if ( isset($data_already_hash[0]) ){
+                        $file_store_dir = $data_already_hash[0]['dir'];
+                    }
+                }
+
+
+                if (! $file_store_column){ $file_store_column = $form_name; }
+
+                // 1. すでにアップロード済みだった（アップロード、削除、並び替え前の）データ
+                $files_already = @json_decode($q["{$k}__already"],true);
+
+                // 2. すでにアップロード済みだった（アップロード、削除、並び替えを行なった後）のデータ
+                // 2019_06_01 修正
+                $files_already_edited = json_decode(@$q["fileuploader-list-{$k}"],true);
+                if ( is_null($files_already_edited) ){
+                    $files_already_edited = [];
+                }
+// dd( $files_already_edited );
+// dd( $files_already );
+// dump( $files_already,$files_already_edited );
+
+                // 3. 新規アップロードしたデータ（アップロードがない場合は存在しない）
+                $files_new_uploaded = @$q[$k];
+
+                // 削除されるべきデータを抽出
+                $delete_files = [];
+                $delete_files = $this->getFileuploaderDeleteFiles($files_already, $files_already_edited);
+                // dd( '削除されるファイルは', $delete_files );
+                // dump( 'files_already は', $files_already );
+
+                // データを削除
+                $deleted_already_file_flag = false;
+                foreach ($delete_files as $dvv) {
+                    $flag = \Storage::disk($file_store_disk)->delete("{$file_store_dir}/{$dvv['file_name']}");
+                    $deleted_already_file_flag = true;
+                    // files_already からも削除
+                    for ($fa_i=0; $fa_i < count($files_already); $fa_i++) {
+                        if ( strcmp($files_already[$fa_i]['file_name'], $dvv['file_name'] ) == 0 ){
+                            // dump( 'マッチ:' .$dvv['file_name'] );
+                            array_splice($files_already, $fa_i, 1);
+                            break;
+                        }
+                    }
+                }
+                // dd( '削除処理後のfiles_already は', $files_already );
+
+                // 4. 新規アップロードしたファイルの処理
+                $files_already_and_new = [];
+                if ( is_array($files_already)){
+                    $files_already_and_new = $files_already;
+                }
+
+                // data-fileuploader-limit="1" の 時は 配列ではなく、直接 UploadedFile オブジェクトがセットされるので配列にする
+                if (is_object($files_new_uploaded)){
+                    if ( get_class($files_new_uploaded) == 'Illuminate\Http\UploadedFile' ){
+                        // dd( 'UploadedFileオブジェクトです' );
+                        $files_new_uploaded_object = $files_new_uploaded;
+                        $files_new_uploaded = [ $files_new_uploaded_object ];
+                    }
+                }
+
+
+                if ( is_array($files_new_uploaded) ){
+                    foreach ($files_new_uploaded as $vk => $vv) {
+                        // ファイル名
+                        $dt = \Carbon\Carbon::now();
+                        $ext = $vv->getClientOriginalExtension();
+                        $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . ".{$ext}";    // 保存ファイル名
+                        $ja_file_name = $vv->getClientOriginalName();                      // 日本語ファイル名
+
+                        // ファイル保存
+                        $vv->storeAs( $file_store_dir, $image_name, $file_store_disk );
+
+                        // ファイル情報取得
+                        $finfo = [
+                            'disk'          => $file_store_disk ,
+                            'dir'           => $file_store_dir ,
+                            'file_name'     => $image_name ,
+                            'original_name' => $ja_file_name ,
+                            'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
+                        ];
+
+                        // $files_already_and_new に突っ込んでおいて、後から削除されたデータを削除する
+                        array_push( $files_already_and_new, $finfo );
+                    }
+                }
+
+                    // dd( 'files_already_and_new',$files_already_and_new );
+
+                // 5. ファイルリスト情報を更新
+                $complete_files_already_and_new = [];
+                if ( $files_already_and_new ){
+// dd( $files_already_and_new,$files_already_edited );
+                    // $files_already_edited の通りに並べる
+                    foreach ($files_already_edited as $vvvvv) {
+                        // dump('check:'.basename($vvvvv['file']) );
+                        foreach ($files_already_and_new as $faan_v) {
+                            $match_flag = 0;
+                            // 既存データの時は file は http(s)://...... となる。　新規アップロードの時は file は /テスト.png のような表記となる。
+                            if ( preg_match("{^https?://}",$vvvvv['file'] ) ){
+                                // ・既存データの時は「file_name」と比較する
+                                if ( strcmp(basename($vvvvv['file']), $faan_v['file_name']) == 0 ){
+                                    $match_flag = 1;
+                                }
+                            }
+                            else {
+
+                                // ・新規アップロードの時は「original_name」と比較する
+                                if ( strcmp(basename($vvvvv['file']), $faan_v['original_name']) == 0 ){
+                                    $match_flag = 1;
+                                }
+                            }
+
+                            if ( $match_flag == 1 ){
+                                // dump("{$faan_v['file_name']}が一致します");
+                                array_push($complete_files_already_and_new, $faan_v);
+                            }
+                        }
+                    }
+
+                    // OFF $q[$file_store_column] = json_encode($files_already_and_new);
+                    $q[$file_store_column] = json_encode($complete_files_already_and_new);
+                    // dd( $file_store_column,$q[$file_store_column] );
+                }
+                // 削除した結果ファイル数が0になった場合
+                elseif ( $deleted_already_file_flag == true ){
+                    $q[$file_store_column] = null;
+                }
+
+                //  fileuploader-list-[カラム名] を削除する
+                unset( $q["fileuploader-list-{$form_name}"] );
+                //  [カラム名]__already を削除する
+                unset( $q["{$form_name}__already"] );
+
+// dd( "{$form_name}",$q["{$form_name}"] );
+                // dd( $k, $files_already, $files_already_edited, $files_new_uploaded );
+            }
+        }
+
+// dd( $q );
+        return $q;
+    }
+
+
+
+    /**
+     * コンポーネント「component_summernote」 データ削除時のファイル削除
+     *
+     * file_uploader で データ削除時に画像ファイルがあった時の処理
+     */
+    // private function destroyComponentFileuploader($crud_config, $data_already)
+    // {
+
+    //     foreach ($crud_config->table_desc as $k => $v) {
+    //         if (preg_match("/^component_fileuploader$/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+    //             $form_name = $crud_config->table_desc->{$k}->name;
+    //             // dd( $data_already[$form_name], $crud_config->table_desc->{$k} );
+
+    //             $files_already = @json_decode($data_already[$form_name],true);
+    //             // dd( $files_already );
+    //             foreach ($files_already as $k => $v) {
+    //                 $file_store_disk = $v['disk'];
+    //                 $file_store_dir  = $v['dir'];
+    //                 $file_name       = $v['file_name'];
+    //                 \Storage::disk($file_store_disk)->delete("{$file_store_dir}/{$file_name}");
+    //             }
+    //         }
+    //     }
+    // }
+
+
+
+
+
+
+    /**
+     * このメソッドは削除されるべきデータの抽出を行います
+     *
+     *
+     */
+    private function getFileuploaderDeleteFiles($files_already, $files_already_edited)
+    {
+        // dd( $files_already, $files_already_edited );
+        $delete_files = [];
+
+        if ( ! is_array($files_already) ){
+            return $delete_files;
+        }
+
+        foreach ($files_already as $k => $v) {
+
+            $same_flag = 0;
+            foreach ($files_already_edited as $kkk => $vvv) {
+                // dump($v['file_name'], basename($vvv['file']) );
+                if ( strcmp($v['file_name'], basename($vvv['file'])) == 0 ){
+                    // dump("{$v['file']}は一致します");
+                    $same_flag = 1;
+                }
+            }
+
+            if ($same_flag == 0){
+                array_push($delete_files,$v);
+            }
+        }
+
+        // dd("削除されるファイルは",$delete_files);
+        return $delete_files;
+
+    }
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

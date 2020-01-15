@@ -1,5 +1,15 @@
 <?php
 
+
+/**
+ * Trait
+ *
+ * @version 0.3 [add] crud_has_input_type() method
+ * @version 0.4 [add] crud_has_input_type() method
+ *
+ */
+
+
 namespace App;
 
 use Illuminate\Support\Facades\DB;
@@ -14,27 +24,245 @@ trait CrudTrait
      * CRUD情報jsonの読み込み
      * @return
      */
-    public function crud_set_json( $file_name='' )
+    public function crud_set_json( $format='json', string $class_name = '' )
     {
-        // ネームスペースを除いたクラス名を取得
-        $ar = explode('\\', __CLASS__);
-        $class_name = end($ar);
+        if (! $class_name ){
+            // ネームスペースを除いたクラス名を取得
+            $ar = explode('\\', __CLASS__);             // これだと　継承した時に 記述されたクラス名を取得してしまう
+            $ar = explode('\\', get_called_class());    // これでうまく行きます
+            $class_name = end($ar);
+        }
+// dump($class_name);
+// dd(get_called_class());
+// dump($class_name);
 
-        $url = __DIR__ . '/' . $class_name . '.json';
-        $json = file_get_contents($url);
-        $this->crud_config =  json_decode($json);
+        if (strcmp($format, 'json') == 0 ){
+            $url = __DIR__ . '/' . $class_name . '.json';
+            $input_src = file_get_contents($url);
+            $this->crud_config = json_decode($input_src);
+        }
+        elseif (strcmp($format, 'yaml') == 0 ){
+            $url = __DIR__ . '/' . $class_name . '.yml';
+            $input_src = file_get_contents($url);
+            $this->crud_config = \Symfony\Component\Yaml\Yaml::parse($input_src);
+            // 配列をObjectに変換
+            $this->crud_config = json_decode(json_encode($this->crud_config));
+        }
     }
+
+
+
+
+    /**
+     * CRUD情報の中に
+     *              input_type          : component_summernote
+     *              のような component を含むかどうかを判別して返す。
+     *
+     *
+     * @return  boolean     true: 指定したコンポーネントが存在する  false:指定したコンポーネントが存在しない
+     *
+     */
+    public function crud_has_input_type( string $input_type_name )
+    {
+        $crud_config = $this->get_crud_config();
+        foreach ($crud_config->table_desc as $k => $v) {
+            if ( @$v->input_type === $input_type_name ){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
 
     /**
      * CRUD情報のgetter
+     *
      * @return
+     *
      */
     public function get_crud_config()
     {
         return $this->crud_config;
     }
 
+
+
+    /**
+     * 独自メソッド : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
+     *
+     *
+     */
+    public function _file_download( string $column_name, int $no ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+
+                $json_array = json_decode( $this->attributes[$k], true );
+
+                if ( is_null($json_array) ){ return null; }
+                if ( ! isset($json_array[$no]) ){ return null; }
+
+                $json = $json_array[$no];
+                $disk = \Storage::disk($json['disk']);
+                return $disk->download("{$json['dir']}/{$json['file_name']}");
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_storage_file_url('local', item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ local ディスク等 ）
+     *
+     * /file/show/201906171543__1094201681?path=app/auction
+     *
+     *
+     */
+    // public function _storage_file_url( string $disk_name='local', string $column_name, int $no ){
+    //     foreach ($this->attributes as $k => $v) {
+    //         if ( strcmp($column_name, $k) == 0 ){
+    //             if ( is_null($this->attributes[$k]) ){ return null; }
+    //             $json_array = json_decode( $this->attributes[$k], true );
+
+    //             if ( is_null($json_array) ){ return null; }
+    //             if ( ! isset($json_array[$no]) ){ return null; }
+
+    //             // dd( $json_array[$no] );
+    //             $json = $json_array[$no];
+    //             // dd( $json );
+    //             $disk = \Storage::disk($json['disk']);
+    //             return $disk->url("{$json['dir']}/{$json['file_name']}");
+    //         }
+    //     }
+    //     return null;
+    // }
+
+
+    /**
+     * 独自メソッド : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
+     *
+     *
+     */
+    public function _file_dir_and_filename( string $column_name, int $no ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+// dd( $this->attributes[$k] );
+                $json_array = json_decode( $this->attributes[$k], true );
+
+                if ( is_null($json_array) ){ return null; }
+                if ( ! isset($json_array[$no]) ){ return null; }
+
+                // dd( $json_array[$no] );
+                $json = $json_array[$no];
+                // dd( $json );
+                $disk = \Storage::disk($json['disk']);
+                return "{$json['dir']}/{$json['file_name']}";
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     *
+     *
+     */
+    public function _file_path( string $column_name, int $no ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+// dd( $this->attributes[$k] );
+                $json_array = json_decode( $this->attributes[$k], true );
+
+                if ( is_null($json_array) ){ return null; }
+                if ( ! isset($json_array[$no]) ){ return null; }
+
+                // dd( $json_array[$no] );
+                $json = $json_array[$no];
+                // dd( $json );
+                $disk = \Storage::disk($json['disk']);
+                return $disk->path("{$json['dir']}/{$json['file_name']}");
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     *
+     *
+     */
+    public function _file_url( string $column_name, int $no ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+// dd( $this->attributes[$k] );
+                $json_array = json_decode( $this->attributes[$k], true );
+
+                if ( is_null($json_array) ){ return null; }
+                if ( ! isset($json_array[$no]) ){ return null; }
+
+                // dd( $json_array[$no] );
+                $json = $json_array[$no];
+                // dd( $json );
+                $disk = \Storage::disk($json['disk']);
+                return $disk->url("{$json['dir']}/{$json['file_name']}");
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
+     *
+     *
+     */
+    public function _file_count( string $column_name ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                $json_array = json_decode( $this->attributes[$k], true );
+                if (is_null($json_array)){ return 0; }
+                return count($json_array);
+            }
+        }
+        return null;
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
+     *
+     *
+     */
+    public function _file_width_height( string $column_name, int $no ){
+        $file_path = $this->_file_path($column_name, $no);
+        // dd( $file_path );
+        if ( is_file($file_path) ){
+            $i = getimagesize($file_path);
+            return [ $i[0], $i[1]];
+        }
+    }
+
+
+
+
+
+
+    public static function get_model_classname()
+    {
+        static::who(); // これで、遅延静的束縛が行われます
+    }
 
 
 

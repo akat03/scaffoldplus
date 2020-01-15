@@ -9,7 +9,6 @@ use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 use Akat03\Scaffoldplus\Migrations\SchemaParser;
 use Akat03\Scaffoldplus\Migrations\SyntaxBuilder;
 
-
 class MakeController
 {
     // use AppNamespaceDetectorTrait, MakerTrait;
@@ -24,15 +23,13 @@ class MakeController
     {
         $this->files = $files;
         $this->scaffoldCommandObj = $scaffoldCommand;
-
         $this->start();
-
     }
+
 
     private function start()
     {
         // Cria o nome do arquivo do controller // TweetController
-
 
         $name = $this->scaffoldCommandObj->getObjName('Name') . 'Controller';
 
@@ -44,16 +41,26 @@ class MakeController
         // Cria a pasta caso nao exista
         $this->makeDirectory($path);
 
-        // Grava o arquivo
+        // Save Controller
         $this->files->put($path, $this->compileControllerStub());
+
+        // save CrudControllerTrait
+        $trait_path = './app/Http/Controllers/CrudControllerTrait.php';
+        if ( ! is_file($trait_path) ){
+            $this->files->put($trait_path,  $this->files->get(__DIR__ . '/../Stubs/CrudControllerTrait.stub') );
+        }
+
+        // save language files
+        $lang_path_ja = './resources/lang/ja/excrud.php';
+        if ( ! is_file($lang_path_ja) ){
+            if ( ! is_dir( dirname($lang_path_ja) ) ){ mkdir( dirname($lang_path_ja) ); }
+            $this->files->put($lang_path_ja,  $this->files->get(__DIR__ . '/../Stubs/resources/lang/ja/excrud.php') );
+        }
 
         $this->scaffoldCommandObj->info('Controller created successfully.');
 
         //$this->composer->dumpAutoloads();
     }
-
-
-
 
 
     /**
@@ -69,7 +76,6 @@ class MakeController
             ->replaceModelPath($stub)
             ->replaceModelName($stub)
             ->replaceSchema($stub, 'controller');
-
 
         return $stub;
     }
