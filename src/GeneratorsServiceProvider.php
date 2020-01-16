@@ -38,8 +38,12 @@ class GeneratorsServiceProvider extends ServiceProvider {
 		$this->app->singleton('command.larascaf.scaffold', function ($app) {
 			return $app['Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand'];
 		});
-
 		$this->commands('command.larascaf.scaffold');
+
+		$this->app->singleton('command.scaffoldplus.publish', function ($app) {
+			return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusPublishCommand'];
+		});
+		$this->commands('command.scaffoldplus.publish');
 	}
 
 

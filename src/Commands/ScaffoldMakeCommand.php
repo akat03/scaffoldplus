@@ -24,14 +24,14 @@ class ScaffoldMakeCommand extends Command {
 	 *
 	 * @var string
 	 */
-	protected $name = 'make:scaffoldplus';
+	protected $name = 'scaffoldplus:create';
 
 	/**
 	 * The console command description.
 	 *
 	 * @var string
 	 */
-	protected $description = 'Create a scaffold plus';
+	protected $description = 'Create Migration, Model, Controller, and YAML(json)';
 
 	/**
 	 * Meta information for the requested migration.
