@@ -2,14 +2,29 @@
 
 # ● Installation
 
-##1.
+## 0. add composer.json
+**composer.json**
+
 ```
-composer require ..............
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/akat03/scaffoldplus.git"
+        }
+    ],
 ```
 
-##2. edit config/app.php の ‘providers’ の一番下に追加
+
+## 1. Install packages via Composer
+
+```
+composer require akat03/scaffoldplus
+```
+
+## 2. edit config/app.php and add 'providers'
 
 add ‘providers’ in file **config/app.php** .
+
 ```
     'providers' => [
         Illuminate\Auth\AuthServiceProvider::class,
@@ -19,22 +34,51 @@ add ‘providers’ in file **config/app.php** .
         Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
 ```
 
+## 3. clear Laravel and Composer cache 
+```
+php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
+```
+
+## 4. show scaffolding command
+```
+php artisan
+```
+
+show some commands like below
+
+```
+ scaffoldplus
+  scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
+  scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
+```
+
+
 
 # ● Execute Scaffold
 
 
-
-# ● Sample Shell Script
-
-
-**scaffold_docs.sh**
+## ＊1. Copy assets to your public directory
 ```
-s_controller_name="Doccategory"
-s_model_name="docs"
-s_migration_name="docs"
+php artisan scaffoldplus:publish
+```
+
+## ＊2. Create Shell Script
+
+```
+vi scaffold_posts.sh
+```
+
+**scaffold_posts.sh**
+
+```
+s_controller_name="Post"
+s_model_name="posts"
+s_migration_name="posts"
 
 # =========================================== change this
-# name:text:comment('category name'),
+# name:text:comment('title name'),
+# content_name:text:comment('content name'),
+# img_file:text:comment('image file'),
 # sort_no:integer:unsigned:default(0):comment('sort number'),
 # =========================================== change this
 
@@ -54,7 +98,7 @@ mv ./resources/views/${s_model_name}/  ./___bak/resources/views/___`date "+%Y%m%
 
 # Execute Scaffolding Plus
 # =========================================== change this
-php artisan make:scaffoldplus ${s_controller_name} --stubs="./resources/views/scaffolding_stubs" --extends="layout" --crud_format="yaml" --no-interaction --schema="name:text:comment('カテゴリ名'),sort_no:integer:unsigned:default(0):comment('ソート番号')"
+php artisan scaffoldplus:create ${s_controller_name} --extends="layout" --crud_format="yaml" --no-interaction --schema="name:text:comment('title name'),content_name:text:comment('content name'),img_file:text:comment('image file'),sort_no:integer:unsigned:default(0):comment('sort number')"
 # =========================================== change this
 
 
@@ -64,3 +108,39 @@ php artisan make:scaffoldplus ${s_controller_name} --stubs="./resources/views/sc
 # mv  ./app/Http/Controllers/${s_controller_name}Controller.php  ./app/Http/Controllers/Admin/${s_controller_name}Controller.php
 # =========================================== change this
 ```
+
+## ＊3. Execute Shell Script
+
+```
+sh scaffold_posts.sh
+```
+
+## ＊4. Execute Migration
+
+```
+php artisan migrate
+```
+
+## ＊5. Add Routes
+
+**routes/web.php**
+
+```
+Route::get("posts/dl_delete_submit", "PostController@dl_delete_submit")->name("posts.dl_delete_submit"); // multiple delete
+Route::post("posts/sort_exec_ajax", "PostController@sort_exec_ajax")->name("posts.sort_exec_ajax"); // sort exec
+Route::get("posts/sort", "PostController@sort")->name("posts.sort"); // sort view
+Route::delete("posts/destroy_ajax", "PostController@destroy_ajax")->name("posts.destroy_ajax"); // ajax delete
+Route::get("posts/index_ajax", "PostController@index_ajax")->name("posts.index_ajax"); // ajax index
+Route::get("posts/search", "PostController@search")->name("posts.search");
+Route::resource("posts","PostController");
+```
+
+
+## ＊6. Edit yaml
+
+**app/Post.yml**
+
+```
+vi app/Post.yml 
+```
+
