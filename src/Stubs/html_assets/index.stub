@@ -197,7 +197,7 @@
                         @endforeach
                         </select>
                         <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_limit_post')</p>
-                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_total',['no'=>$posts_rows->appends($pagination_params)->total()])</p>
+                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_total',['no'=>${{class}}_rows->appends($pagination_params)->total()])</p>
                         <p class="index_sort_name">@lang('excrud.list_order') ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')@lang('excrud.list_desc') @else @lang('excrud.list_asc') @endif) </p>
                     </div>
                     <div class="mx-auto" style="width: 400px;">
