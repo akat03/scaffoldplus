@@ -76,7 +76,7 @@ s_model_name="posts"
 s_migration_name="posts"
 
 # =========================================== change this
-# name:text:comment('title name'),
+# name:string:comment('title name'),
 # content_name:text:comment('content name'),
 # img_file:text:comment('image file'),
 # sort_no:integer:unsigned:default(0):comment('sort number'),
@@ -98,7 +98,7 @@ mv ./resources/views/${s_model_name}/  ./___bak/resources/views/___`date "+%Y%m%
 
 # Execute Scaffolding Plus
 # =========================================== change this
-php artisan scaffoldplus:create ${s_controller_name} --extends="layout" --crud_format="yaml" --no-interaction --schema="name:text:comment('title name'),content_name:text:comment('content name'),img_file:text:comment('image file'),sort_no:integer:unsigned:default(0):comment('sort number')"
+php artisan scaffoldplus:create ${s_controller_name} --extends="layout" --crud_format="yaml" --no-interaction --schema="name:string:comment('title name'),content_name:text:comment('content name'),img_file:text:comment('image file'),sort_no:integer:unsigned:default(0):comment('sort number')"
 # =========================================== change this
 
 
@@ -143,4 +143,25 @@ Route::resource("posts","PostController");
 ```
 vi app/Post.yml 
 ```
+
+add **view_add_param_php** , **input_css_style** into **sort_no**
+
+```
+    sort_no:
+        name: sort_no
+        view_list_title: 'sort number'
+        comment: 'sort number'
+        default: null
+        view_list_flag: 1
+        view_show_flag: 1
+        view_add_flag: 1
+        view_edit_flag: 1
+        view_delete_flag: 1
+        editable_flag: 1
+        input_type: text
+        input_css_style: "width:60px;"																# add this
+        view_add_param_php: return \App\Post::orderBy('sort_no','DESC')->first()->sort_no + 1;      # add this
+```
+
+
 

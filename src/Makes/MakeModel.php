@@ -165,7 +165,8 @@ class MakeModel
                 "view_edit_flag"  => 1 ,
                 "view_delete_flag"=> 1 ,
                 "editable_flag"   => 1 ,
-                "input_type"      => "text"
+                "input_type"      => "text" ,
+                "input_css_style" => "" ,
             ];
             if ($v['type'] == 'text'){
                 $h['input_type'] = 'textarea';

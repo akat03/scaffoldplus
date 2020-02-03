@@ -190,14 +190,15 @@
 
                 <div>
                     <div style="float:left; padding-top:5px; margin-right:15px;">
+                        @if(\Lang::get('excrud.list_limit_pre')!='') <p style="float:left; margin:0 5px; padding-top:2px;">@lang('excrud.list_limit_pre')</p> @endif
                         <select style="float:left" id="limit" onchange="change_limit();">
                         @foreach ($crud_config->view_list_limit_param as $lpv)
                             <option value="{{$lpv}}" @if( @$q['limit'] == $lpv) selected @endif>{{$lpv}}</option>
                         @endforeach
                         </select>
-                        <p style="float:left; margin-left:5px; padding-top:2px;">件 表示</p>
-                        <p style="float:left; margin-left:5px; padding-top:2px;">合計 {!! ${{class}}_rows->appends($pagination_params)->total() !!}件 </p>
-                        <p class="index_sort_name">ソート順 ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')降順 @else 昇順 @endif) </p>
+                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_limit_post')</p>
+                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_total',['no'=>$posts_rows->appends($pagination_params)->total()])</p>
+                        <p class="index_sort_name">@lang('excrud.list_order') ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')@lang('excrud.list_desc') @else @lang('excrud.list_asc') @endif) </p>
                     </div>
                     <div class="mx-auto" style="width: 400px;">
                         {!! ${{class}}_rows->appends($pagination_params)->links('pagination.default') !!}
@@ -217,7 +218,6 @@
 
 <script>
 function change_limit(){
-    // 今のURLのlimitを書き換える。limitがない場合は付け加える というロジックに変更予定
     add_hidden_limit();
 }
 
@@ -240,10 +240,5 @@ function make_hidden( name, value, formname ){
     else{ document.forms[0].appendChild(q); }
 }
 </script>
-
-@if(env('APP_DEBUG') == 1)
-    @php($template_filename = '{{prefix}}{{class}}/index.blade.php')
-    @php($compiled_template_filename = __FILE__)
-@endif
 
 @endsection

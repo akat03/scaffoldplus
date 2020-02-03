@@ -34,6 +34,7 @@ class ScaffoldplusPublishCommand extends Command
      */
     protected $description = 'Publish /assets/js/ , /assets/css/ files';
 
+
     /**
      * Create a new command instance.
      *
@@ -47,6 +48,7 @@ class ScaffoldplusPublishCommand extends Command
         $this->composer = $composer;
     }
 
+
     /**
      * Execute the console command.
      *
@@ -54,16 +56,30 @@ class ScaffoldplusPublishCommand extends Command
      */
     public function fire()
     {
+        // 1. copy /assets folder
 		$sourceDir      = __DIR__ . '/../Stubs/assets';
 		$destinationDir = public_path() . '/assets';
 
-        // Start Publish
         if ( ! is_dir($destinationDir) ){
             $success = \File::copyDirectory($sourceDir, $destinationDir);        
-            $this->info("Success: /assets/ folder copyied.");
+            $this->info("Success: /assets/ folder copied.");
         }
         else {
-            $this->error("Error: folder /assets/ already exists.");        
+            $success = \File::copyDirectory($sourceDir, $destinationDir);        
+            $this->info("Success: /assets/ folder updated.");
+        }
+
+        // 2. copy Stubs/resources/lang/ja/excrud.php
+        $sourceFile      = __DIR__ . '/../Stubs/resources/lang/en/excrud.php';
+        $destinationFile = resource_path('lang/en/excrud.php');
+        if ( \File::copy($sourceFile, $destinationFile) ){
+            $this->info("Success: resources/lang/en/excrud.php copied.");            
+        }
+
+        $sourceFile      = __DIR__ . '/../Stubs/resources/lang/ja/excrud.php';
+        $destinationFile = resource_path('lang/ja/excrud.php');
+        if ( \File::copy($sourceFile, $destinationFile) ){
+            $this->info("Success: resources/lang/en/excrud.php copied.");            
         }
 
     }
