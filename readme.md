@@ -26,14 +26,33 @@ add ‘providers’ in file **config/app.php** .
         Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
 ```
 
+## 3. edit .env file
+
+change database settings in **.env** 
+
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=test
+DB_USERNAME=test
+DB_PASSWORD=xxxxxxxxxxxx
+```
+
+change **APP_URL** in **.env** 
+
+```
+APP_URL=https://your-server.com
+```
 
 
-## 3. clear Laravel and Composer cache 
+
+## 4. clear Laravel and Composer cache 
 ```
 php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
 ```
 
-## 4. show scaffolding command
+## 5. show scaffolding command
 ```
 php artisan
 ```
@@ -47,7 +66,7 @@ show some commands like below
 ```
 
 
-## 5. Add Form Helper
+## 6. Add Form Helper
 
 
 **(PHP7)**
@@ -145,6 +164,8 @@ php artisan scaffoldplus:create ${s_controller_name} --extends="layout" --crud_f
 ```
 sh scaffold_posts.sh
 ```
+
+
 
 ## ＊4. Execute Migration
 
