@@ -79,7 +79,6 @@ class MakeView
                 $this->files->put($path, $this->compileViewStub($nameView));
             }
         } else {
-
             // Put file
             $this->files->put($path, $this->compileViewStub($nameView));
         }
@@ -166,10 +165,32 @@ class MakeView
                 ->replaceSchemaIndex($stub);
         }
 
-
+        // Laravel 5.4
+        if( version_compare( app()->version(), '5.5', '<') ){
+            $this->replaceOldBladeSyntax( $stub );
+        }
 
         return $stub;
     }
+
+
+
+    /**
+     * Replace the class name in the stub.
+     *
+     * @param  string $stub
+     * @return $this
+     */
+    protected function replaceOldBladeSyntax(&$stub)
+    {
+        echo("Info: You are using Laravel " . app()->version() . " . replace Blade Syntax.\n" );
+        $stub = str_replace('@php', '<?php ', $stub);
+        $stub = str_replace('@endphp', '?>', $stub);
+        $stub = str_replace('@csrf', '<input type="hidden" name="_token" value="{{ csrf_token() }}"', $stub);
+
+        return $this;
+    }
+
 
 
     /**

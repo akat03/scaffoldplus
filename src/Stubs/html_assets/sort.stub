@@ -144,9 +144,4 @@ var _global_crud_sort_url = '{{ Request::url() }}_exec_ajax';
 
 
 
-@if(env('APP_DEBUG') == 1)
-    @php($template_filename = 'admin.{{class}}/sort.blade.php')
-    @php($compiled_template_filename = __FILE__)
-@endif
-
 @endsection
