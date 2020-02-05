@@ -12,13 +12,16 @@
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link href="{{ asset('/assets/excrud/css/excrud.css') }}" rel="stylesheet">
+    <link href="{{ asset('/assets/excrud/css/btn.css') }}" rel="stylesheet">
+    <link href="{{ asset('/assets/excrud/css/parts.css') }}" rel="stylesheet">
 </head>
 
 <body>
     <header>
         <nav class="navbar header-top fixed-top navbar-expand-lg navbar-dark bg-dark">
             <span class="navbar-toggler-icon"></span>
-            <a class="navbar-brand" href="#">Laravel Scaffold Plus</a>
+            <a class="navbar-brand" href="#"> Laravel Scaffold Plus</a>
 
             <!-- Breadcrumbs -->
             <!-- /Breadcrumbs -->
