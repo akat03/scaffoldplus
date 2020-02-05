@@ -24,7 +24,7 @@ trait CrudTrait
      * CRUD情報jsonの読み込み
      * @return
      */
-    public function crud_set_json( $format='json', string $class_name = '' )
+    public function crud_set_json( $format='json', $class_name = '' )
     {
         if (! $class_name ){
             // ネームスペースを除いたクラス名を取得

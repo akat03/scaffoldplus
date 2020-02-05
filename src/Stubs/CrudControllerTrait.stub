@@ -868,7 +868,7 @@ trait CrudControllerTrait
      * @version     0.3         削除した結果ファイル数が 0 になった場合明示的に null を返すよう修正
      *
      */
-    private function updateComponentFileuploader($q, $crud_config, $data_already, string $store_dir_override='no')
+    private function updateComponentFileuploader($q, $crud_config, $data_already, $store_dir_override='no')
     {
         // dd($q, $crud_config, $data_already);
 
