@@ -316,11 +316,6 @@
 
 </form>
 
-@if(env('APP_DEBUG') == 1)
-    @php($template_filename = '{{prefix}}{{class}}/edit.blade.php')
-    @php($compiled_template_filename = __FILE__)
-@endif
-
 @endsection
 
 @section('scripts')
