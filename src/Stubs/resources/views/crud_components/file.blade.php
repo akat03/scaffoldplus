@@ -27,8 +27,8 @@ $class:{{$class}}<br>
 			/ {{ number_format(@$json['size'])}} bytes
 		@endif
 	)</span><br>
-	<label><input name="{{$column_name}}__edit_flag" type="radio" value="notedit" checked=""> 変更しない</label>
-	<label class="text-danger ml15 mr15"><input name="{{$column_name}}__edit_flag" type="radio" value="delete"> 削除する</label>
+	<label><input name="{{$column_name}}__edit_flag" type="radio" value="notedit" checked=""> @lang('excrud.component_file__attach_file_use')</label>
+	<label class="text-danger ml15 mr15"><input name="{{$column_name}}__edit_flag" type="radio" value="delete"> @lang('excrud.component_file__attach_file_delete')</label>
 @endif
 
 <input type="file" name="{{$column_name}}__attach">
