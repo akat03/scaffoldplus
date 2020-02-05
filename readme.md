@@ -13,9 +13,21 @@
         }
     ],
 ```
+```
+    "require": {
+        ........
+        ........
+        "akat03/scaffoldplus" : "dev-master" ,
+```
 
 
 ## 1. Install packages via Composer
+
+```
+composer update
+```
+
+or
 
 ```
 composer require akat03/scaffoldplus
