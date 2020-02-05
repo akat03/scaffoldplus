@@ -61,8 +61,9 @@ class ScaffoldplusPublishCommand extends Command
 		$destinationDir = public_path() . '/assets';
 
         if ( ! is_dir($destinationDir) ){
-            $success = \File::copyDirectory($sourceDir, $destinationDir);        
-            $this->info("Success: /assets/ folder copied.");
+            if ( \File::copyDirectory($sourceDir, $destinationDir) ){
+                $this->info("Success: /assets/ folder copied.");            
+            }
         }
         else {
             $sourceDir      = __DIR__ . '/../Stubs/assets/excrud';
