@@ -1710,3 +1710,7 @@ table.fc-border-separate {
     border-bottom: 1px solid rgba(0, 0, 0, .125);
     color: #436303b0;
 }
+
+a.btn , button.btn , input[type="button"].btn , input[type="submit"].btn {
+    white-space: nowrap;
+}

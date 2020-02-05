@@ -15,6 +15,19 @@
     <link href="{{ asset('/assets/excrud/css/excrud.css') }}" rel="stylesheet">
     <link href="{{ asset('/assets/excrud/css/btn.css') }}" rel="stylesheet">
     <link href="{{ asset('/assets/excrud/css/parts.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+    <script>
+        WebFont.load({
+            // google: {"families":["Lato:300,400,700,900"]},
+            custom: {
+                // "families":["Flaticon", "Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"], 
+                "urls": ['https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css']
+            },
+            active: function() {
+                sessionStorage.fonts = true;
+            }
+        });
+    </script>
 </head>
 
 <body>
@@ -66,9 +79,24 @@
         </div>
     </nav>
 
+
     <div class="container" style="margin-top: 50px;">
         @yield('header')
         @yield('content')
+    </div>
+
+
+    <div class="footer">
+        <div class="footer-inner">
+            <div class="container">
+                <div class="row">
+                    <div class="span12">
+                        &copy; <script type="text/javascript">document.write(new Date().getFullYear());</script>
+                        <a href="https://github.com/akat03/scaffoldplus" target="_blank">scaffoldplus</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 </body>
