@@ -238,7 +238,15 @@ change img_file , like below
         view_list_php: echo "<img width='128' src='" . $post->_onefile_url('img_file') . "'>";
 ```
 
-## ＊7. Access Laravel App
+
+## ＊7. Create storage link
+
+```
+php artisan storage:link
+```
+
+
+## ＊8. Access your laravel app
 
 access 
 [http://localhost/posts](http://localhost/posts)
