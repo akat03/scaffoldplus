@@ -20,6 +20,12 @@
         "akat03/scaffoldplus" : "dev-master" ,
 ```
 
+```
+removed
+        // "laravel/helpers": "*" ,
+```
+
+
 
 ## 1. Install packages via Composer
 
