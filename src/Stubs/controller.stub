@@ -27,10 +27,12 @@ class {{class}} extends Controller {
 
 
 	/**
-	 * 検索に使用するカラムを明示的に設定する（適宜書き換えること。また __construct() の $this->setSearchColumnsAuto(); を $this->setSearchColumns(); に変更すること。）
+	 * Set search columns
+	 *
 	 * @return void
 	 */
-	private function setSearchColumns(){
+	private function setSearchColumns()
+	{
 		$this->search_columns = [
 			"id"                  => "id",
 			"sample__category_id" => "例__カテゴリ名",
@@ -45,7 +47,8 @@ class {{class}} extends Controller {
 	 * set Search Columns from CRUD YAML
 	 * @return void
 	 */
-	private function setSearchColumnsFromCrud(){
+	private function setSearchColumnsFromCrud()
+	{
 		// CRUDS
 	 	$doctor = new {{model_name_class}}();
 		$doctor->crud_set_json('yaml');
@@ -59,7 +62,8 @@ class {{class}} extends Controller {
 	 * 検索に使用するカラムを自動的に設定する
 	 * @return void
 	 */
-	private function setSearchColumnsAuto(){
+	private function setSearchColumnsAuto()
+	{
 		$columns = Schema::getColumnListing('{{model_name_var}}');
 		$columns_loop = $columns;
 		for ($i=count($columns_loop)-1; $i >=0; $i--) {
@@ -459,7 +463,7 @@ class {{class}} extends Controller {
 			return redirect($_back_uri);
 		}
 		else {
-			return redirect()->route('admin.patients.index')->with('message', 'Item updated successfully.');
+			return redirect()->route('{{prefix}}{{model_name_var}}.index')->with('message', 'Item updated successfully.');
 		}
 	}
 
@@ -501,7 +505,6 @@ class {{class}} extends Controller {
 			return $result_array;
         });
         // ========== / transaction ==========
-		// dump($result_array);
 
 
 		$_back_uri = $request->input('_back_uri');
