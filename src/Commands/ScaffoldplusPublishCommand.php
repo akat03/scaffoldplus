@@ -71,7 +71,22 @@ class ScaffoldplusPublishCommand extends Command
             $this->info("Success: /assets/ folder updated.");
         }
 
-        // 2. copy Stubs/resources/lang/ja/excrud.php
+
+        // 2. copy Stubs/resources/views/crud_components folder
+        $sourceDir      = __DIR__ . '/../Stubs/resources/views/crud_components';
+        $destinationDir = resource_path('views/crud_components');
+        if ( ! is_dir($destinationDir) ){
+            $success = \File::copyDirectory($sourceDir, $destinationDir);        
+            $this->info("Success: resources/{$destinationDir}/ copied.");            
+        }
+        else {
+            $success = \File::copyDirectory($sourceDir, $destinationDir);
+            $this->info("Success: resources/{$destinationDir}/ updated.");
+        }
+
+
+
+        // 3. copy Stubs/resources/lang/ja/excrud.php
         $sourceFile      = __DIR__ . '/../Stubs/resources/lang/en/excrud.php';
         $destinationFile = resource_path('lang/en/excrud.php');
         if ( \File::copy($sourceFile, $destinationFile) ){
