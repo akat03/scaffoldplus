@@ -58,11 +58,11 @@ trait CrudTrait
      *              input_type          : component_summernote
      *              のような component を含むかどうかを判別して返す。
      *
-     *
+     * @param   string      input type name (e.g. component_summernote )
      * @return  boolean     true: 指定したコンポーネントが存在する  false:指定したコンポーネントが存在しない
      *
      */
-    public function crud_has_input_type( string $input_type_name )
+    public function crud_has_input_type( $input_type_name )
     {
         $crud_config = $this->get_crud_config();
         foreach ($crud_config->table_desc as $k => $v) {
@@ -92,9 +92,11 @@ trait CrudTrait
     /**
      * 独自メソッド : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
      *
+     * @param   string      $column_name
+     * @param   int         $no
      *
      */
-    public function _file_download( string $column_name, int $no ){
+    public function _file_download( $column_name, $no ){
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
@@ -144,9 +146,11 @@ trait CrudTrait
     /**
      * 独自メソッド : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
      *
+     * @param   string      $column_name
+     * @param   int         $no
      *
      */
-    public function _file_dir_and_filename( string $column_name, int $no ){
+    public function _file_dir_and_filename( $column_name, $no ){
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
@@ -171,9 +175,11 @@ trait CrudTrait
     /**
      * 独自メソッド : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
+     * @param   string      $column_name
+     * @param   int         $no
      *
      */
-    public function _file_path( string $column_name, int $no ){
+    public function _file_path( $column_name, $no ){
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
@@ -198,9 +204,11 @@ trait CrudTrait
     /**
      * 独自メソッド : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
+     * @param   string      $column_name
+     * @param   int         $no
      *
      */
-    public function _file_url( string $column_name, int $no ){
+    public function _file_url( $column_name, $no ){
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
@@ -243,9 +251,11 @@ trait CrudTrait
     /**
      * 独自メソッド : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
      *
+     * @param   string      $column_name
+     * @param   int         $no
      *
      */
-    public function _file_width_height( string $column_name, int $no ){
+    public function _file_width_height( $column_name, $no ){
         $file_path = $this->_file_path($column_name, $no);
         // dd( $file_path );
         if ( is_file($file_path) ){

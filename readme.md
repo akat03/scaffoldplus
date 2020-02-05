@@ -20,10 +20,6 @@
         "akat03/scaffoldplus" : "dev-master" ,
 ```
 
-```
-removed
-        // "laravel/helpers": "*" ,
-```
 
 
 
@@ -38,6 +34,39 @@ or
 ```
 composer require akat03/scaffoldplus
 ```
+
+## 2. Add Form Helper
+
+
+### 2-A. PHP 7
+
+```
+composer require laravel/helpers
+```
+
+### 2-B. PHP 5.6
+
+```
+composer require "laravelcollective/html":"^5.4.0"
+```
+
+add **config/app.php**
+
+```
+    'providers' => [
+        ........
+        Collective\Html\HtmlServiceProvider::class,     // add this
+    ],
+
+
+   'aliases' => [
+        ........
+        'Form' => Collective\Html\FormFacade::class,     // add this
+        'Html' => Collective\Html\HtmlFacade::class,     // add this
+  ],
+```
+
+
 
 ## 2. edit config/app.php and add 'providers'
 
