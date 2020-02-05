@@ -14,16 +14,52 @@
 composer require akat03/scaffoldplus
 ```
 
-## 2. Add Form Helper
+
+## 2. edit config/app.php and add 'providers'
+
+add ‘providers’ in file **config/app.php** .
+
+```
+    'providers' => [
+        ..........
+        ..........
+        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
+```
 
 
-### 2-A. PHP 7
+
+## 3. clear Laravel and Composer cache 
+```
+php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
+```
+
+## 4. show scaffolding command
+```
+php artisan
+```
+
+show some commands like below
+
+```
+ scaffoldplus
+  scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
+  scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
+```
+
+
+## 5. Add Form Helper
+
+
+**(PHP7)**
 
 ```
 composer require laravel/helpers
 ```
 
-### 2-B. PHP 5.6
+and goto next step.
+
+
+**(PHP5.6)**
 
 ```
 composer require "laravelcollective/html":"^5.4.0"
@@ -43,39 +79,6 @@ add **config/app.php**
         'Form' => Collective\Html\FormFacade::class,     // add this
         'Html' => Collective\Html\HtmlFacade::class,     // add this
   ],
-```
-
-
-
-## 3. edit config/app.php and add 'providers'
-
-add ‘providers’ in file **config/app.php** .
-
-```
-    'providers' => [
-        Illuminate\Auth\AuthServiceProvider::class,
-        Illuminate\Broadcasting\BroadcastServiceProvider::class,
-        ..........
-        ..........
-        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
-```
-
-## 4. clear Laravel and Composer cache 
-```
-php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
-```
-
-## 5. show scaffolding command
-```
-php artisan
-```
-
-show some commands like below
-
-```
- scaffoldplus
-  scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
-  scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
 ```
 
 
