@@ -3,53 +3,27 @@
 <img src="https://raw.githubusercontent.com/akat03/scaffoldplus/master/readme-posts-list.png" title="Scaffold , CRUD Package for Laravel 6">
 
 
+<br>
+
 # ● Installation
 
-( requires laravel >= 5.4 )
 
-## 1. add composer.json
-**composer.json**
-
-```
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/akat03/scaffoldplus.git"
-        }
-    ],
-```
-```
-    "require": {
-        ........
-        ........
-        "akat03/scaffoldplus" : "dev-master" ,
-```
-
-
-
-
-## 2. Install packages via Composer
-
-```
-composer update
-```
-
-or
+## 1. Install package via Composer
 
 ```
 composer require akat03/scaffoldplus
 ```
 
-## 3. Add Form Helper
+## 2. Add Form Helper
 
 
-### 3-A. PHP 7
+### 2-A. PHP 7
 
 ```
 composer require laravel/helpers
 ```
 
-### 3-B. PHP 5.6
+### 2-B. PHP 5.6
 
 ```
 composer require "laravelcollective/html":"^5.4.0"
@@ -73,7 +47,7 @@ add **config/app.php**
 
 
 
-## 4. edit config/app.php and add 'providers'
+## 3. edit config/app.php and add 'providers'
 
 add ‘providers’ in file **config/app.php** .
 
@@ -86,12 +60,12 @@ add ‘providers’ in file **config/app.php** .
         Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
 ```
 
-## 5. clear Laravel and Composer cache 
+## 4. clear Laravel and Composer cache 
 ```
 php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
 ```
 
-## 6. show scaffolding command
+## 5. show scaffolding command
 ```
 php artisan
 ```
@@ -105,6 +79,8 @@ show some commands like below
 ```
 
 
+
+<br>
 
 # ● Execute scaffold command
 
@@ -252,6 +228,8 @@ access
 [http://localhost/posts](http://localhost/posts)
 
 
+
+<br>
 
 # ● Thanks to
 [laralib/l5scaffold: Scaffold generator for Laravel 5.x](https://github.com/laralib/l5scaffold)

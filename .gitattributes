@@ -1,5 +1,8 @@
 
-# ".ext"の拡張子をJavaとして検出
+# ".js"の拡張子をJavaとして検出
+*.js linguist-language=PHP
+
+# ".stub"の拡張子をJavaとして検出
 *.stub linguist-language=PHP
 
 # 言語統計から除外する
