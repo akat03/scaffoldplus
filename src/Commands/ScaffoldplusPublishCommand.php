@@ -96,7 +96,7 @@ class ScaffoldplusPublishCommand extends Command
         // 3-2. copy Stubs/resources/lang/ja/excrud.php
         $sourceFile      = __DIR__ . '/../Stubs/resources/lang/ja/excrud.php';
         $destinationFile = resource_path('lang/ja/excrud.php');
-        if ( ! is_dir() ){ \File::makeDirectory( resource_path('lang/ja/') ); }
+        if ( ! is_dir(resource_path('lang/ja/')) ){ \File::makeDirectory( resource_path('lang/ja/') ); }
         if ( \File::copy($sourceFile, $destinationFile) ){
             $this->info("Success: resources/{$destinationFile} copied.");            
         }
