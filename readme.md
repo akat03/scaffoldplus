@@ -1,5 +1,7 @@
 # Scaffold , CRUD Package for Laravel 6
 
+<img src="https://raw.githubusercontent.com/akat03/scaffoldplus/master/readme-posts-list.png" title="Scaffold , CRUD Package for Laravel 6">
+
 
 # ● Installation
 
