@@ -215,6 +215,32 @@ add **view_add_param_php** , **input_css_style** into **sort_no**
 
 ```
 
+change img_file , like below
+
+```
+    img_file:
+        name: img_file
+        view_list_title: 'image file'
+        comment: 'image file'
+        default: null
+        view_list_flag: 1
+        view_show_flag: 1
+        view_add_flag: 1
+        view_edit_flag: 1
+        view_delete_flag: 1
+        editable_flag: 1
+        input_css_style: ''
+        input_type          : component_file
+        file_store_disk     : public
+        file_store_dir      : img_file
+        file_store_base_name: img_file_{id}_01
+        view_list_php: echo "<img width='128' src='" . $post->_onefile_url('img_file') . "'>";
+```
+
+## ＊7. Access Laravel App
+
+access 
+[http://localhost/posts](http://localhost/posts)
 
 
 

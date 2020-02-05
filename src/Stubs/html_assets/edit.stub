@@ -248,8 +248,8 @@
                         @if ( $saved_filename )
                             <a target="_blank" href="{{route('{{prefix}}{{class}}.showfile')}}?file={{$saved_filename}}">{{ $original_filename }}</a>
                             <small>( {{$saved_filename}} / {{$file_size}} )</small>
-                            <label><input name="{{$checkbox_name}}" type="radio" value="notedit" checked=""> 変更しない</label>
-                            <label class="text-danger"><input name="{{$checkbox_name}}" type="radio" value="delete"> 削除する</label>
+                            <label><input name="{{$checkbox_name}}" type="radio" value="notedit" checked=""> @lang('excrud.attach_file_use')</label>
+                            <label class="text-danger"><input name="{{$checkbox_name}}" type="radio" value="delete"> @lang('excrud.attach_file_delete')</label>
                         @endif
                         {{-- / attach file name preview --}}
 

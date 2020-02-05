@@ -212,15 +212,12 @@ trait CrudTrait
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
-// dd( $this->attributes[$k] );
                 $json_array = json_decode( $this->attributes[$k], true );
 
                 if ( is_null($json_array) ){ return null; }
                 if ( ! isset($json_array[$no]) ){ return null; }
 
-                // dd( $json_array[$no] );
                 $json = $json_array[$no];
-                // dd( $json );
                 $disk = \Storage::disk($json['disk']);
                 return $disk->url("{$json['dir']}/{$json['file_name']}");
             }
@@ -262,6 +259,30 @@ trait CrudTrait
             $i = getimagesize($file_path);
             return [ $i[0], $i[1]];
         }
+    }
+
+
+
+    /**
+     * 独自メソッド : ->_onefile_url('item_files_name'); で　DBカラム「item_files_name」の 画像のurlを返す（ public ディスク ）
+     *
+     * @param   string      $column_name
+     *
+     */
+    public function _onefile_url( $column_name ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+                $json_array = json_decode( $this->attributes[$k], true );
+
+                if ( is_null($json_array) ){ return null; }
+
+                $json = $json_array;
+                $disk = \Storage::disk($json['disk']);
+                return $disk->url("{$json['dir']}/{$json['file_name']}");
+            }
+        }
+        return null;
     }
 
 
