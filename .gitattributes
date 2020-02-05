@@ -1,0 +1,8 @@
+
+# ".ext"の拡張子をJavaとして検出
+*.stub linguist-language=PHP
+
+# 言語統計から除外する
+src/Stubs/html_assets/* linguist-vendored  
+
+
