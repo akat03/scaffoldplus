@@ -29,5 +29,6 @@ return [
     'search'          => '検索',
     'search_all'      => '全て',
     'sort'            => '順番変更',
-    'sort'            => '順番変更',
+    'attach_file_use'    => '変更しない',
+    'attach_file_delete' => '削除する',
 ];
