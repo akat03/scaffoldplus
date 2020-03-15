@@ -37,7 +37,7 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">{{$page_title_header}}</h2>
-            <a href="#" onclick="data_create('{{class}}'); return false;" class="btn btn-sm btn-default"><i class="fa fa-edit"></i> 新規クライアント作成</a>
+            <a href="#" onclick="data_create('{{class}}'); return false;" class="btn btn-sm btn-default"><i class="fa fa-edit"></i> @lang('excrud.create', ['tablename' => @$crud_config->table_title])</a>
         </div>
 
     <div class="card-body">
