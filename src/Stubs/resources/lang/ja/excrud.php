@@ -22,6 +22,7 @@ return [
     'list_total'                         => '/ 合計 :no 件',
     'show'                               => '詳細表示',
     'create'                             => '新規登録',
+    'create_tablename'                   => '新規:tablename作成',
     'create_submit'                      => '登録する',
     'edit'                               => '編集',
     'delete'                             => '削除',

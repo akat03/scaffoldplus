@@ -228,9 +228,11 @@ $usage = <<< 'DOC_END'
 # relation_view_show_separator: "<br>"
 # relation_view_edit_param    : "{$relation_model['name']}　　(ID:{$relation_model['id']})"
 
+
 # ===== ＜input type="text"＞にスタイルをつける
 # input_type     : text
 # input_css_style: 'width: 60px;'
+
 
 # ===== ＜SELECT＞ を 別モデルから自動生成　「モデル名:input_values_model」「モデルのidカラム名：input_values_model__id_column」「モデルの表示カラム名：input_values_model__name_column」
 # input_type                     : select
@@ -239,11 +241,13 @@ $usage = <<< 'DOC_END'
 # input_values_model__id_column  : id
 # input_values_model__name_column: branch_name
 
+
 # ===== ＜SELECT＞ を 直接生成
 # input_type        : select
 # input_values_array: {'': 選択してください , day: 日 , week: 週 , month: 月}
 # input_css_class   : form-control
 # input_css_style   : width:160px;
+
 
 # ===== ＜checkbox＞ の　値を指定
 # input_type: checkbox
@@ -251,7 +255,9 @@ $usage = <<< 'DOC_END'
 # input_label: ◯◯◯◯◯する
 
 
-# ===== リレーション（多対多）
+# ===== Relation (hasMany) (morphMany)
+#editable_flag               : 0
+#sortable_flag               : 0
 #relation                    : hasMany
 #relation_model              : App\Patient
 #relation_pivot_model        : App\PatientPractitioner
@@ -269,8 +275,10 @@ $usage = <<< 'DOC_END'
 # view_list_order_column: sort_no
 # view_list_order_direction: ASC
 
+
 # ===== 新規登録ボタンを表示するかどうか？ 1:表示する　0:表示しない　（何も指定しないときは 表示する）
 view_list_add_buttons_flag: 1
+
 
 # ===== 編集ボタンエリア を自由に定義する
 # view_list_edit_buttons_include: crud_edit_buttons.XXXXX_edit_buttons

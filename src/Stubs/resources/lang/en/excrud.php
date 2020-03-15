@@ -22,6 +22,7 @@ return [
     'list_total'                         => '/ Total :no',
     'show'                               => 'Show',
     'create'                             => 'Create',
+    'create_tablename'                   => 'Create :tablename',
     'create_submit'                      => 'Submit',
     'edit'                               => 'Edit',
     'delete'                             => 'Delete',
