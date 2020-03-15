@@ -3,7 +3,7 @@
 
 @php
     $page_title  =  $crud_config->table_title or '{{class}}';
-    $page_title .= \Lang::get('excrud.edit');
+    $page_title .= \Lang::get('excrud.list');
     $page_title_header = $page_title;
 @endphp
 
@@ -129,7 +129,7 @@ var vm = new Vue({
         columns: [
             @foreach ($crud_config->table_desc as $v)
                 @if ($v->view_list_flag == 1)
-                '{{ $v->name }}' ,
+                @if (@$v->view_list_vue)'{{ $v->view_list_vue }}' , @else '{{ $v->name }}' , @endif ,
                 @endif
             @endforeach
             'EDIT'
@@ -139,7 +139,7 @@ var vm = new Vue({
             headings: {
                 @foreach ($crud_config->table_desc as $v)
                     @if ($v->view_list_flag == 1)
-                    '{{ $v->name }}' : '{{ $v->view_list_title }}' ,
+                    @if (@$v->view_list_vue)'{{ $v->view_list_vue }}'  @else '{{ $v->name }}'  @endif : '{{ $v->view_list_title }}' ,
                     @endif
                 @endforeach
                 EDIT        : 'EDIT'
@@ -147,7 +147,7 @@ var vm = new Vue({
             sortable: [
                 @foreach ($crud_config->table_desc as $v)
                     @if ($v->view_list_flag == 1)
-                    '{{ $v->name }}' ,
+                    @if (@$v->view_list_vue)'{{ $v->view_list_vue }}' , @else '{{ $v->name }}' , @endif ,
                     @endif
                 @endforeach
             ],
