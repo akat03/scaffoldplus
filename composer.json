@@ -14,5 +14,12 @@
 		"psr-4": {
 		"Akat03\\Scaffoldplus\\": "src/"
 		}
-	}
+	},
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Akat03\\Scaffoldplus\\GeneratorsServiceProvider"
+            ]
+        }
+    }
 }
