@@ -3,7 +3,6 @@
 namespace Akat03\Scaffoldplus\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Akat03\Scaffoldplus\Makes\MakeController;
@@ -17,7 +16,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
 class ScaffoldMakeCommand extends Command {
-	use DetectsApplicationNamespace, MakerTrait;
+	use MakerTrait;
 
 	/**
 	 * The console command name!

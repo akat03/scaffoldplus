@@ -2,7 +2,6 @@
 namespace Akat03\Scaffoldplus\Makes;
 
 // use Illuminate\Console\AppNamespaceDetectorTrait;
-use Illuminate\Console\DetectsApplicationNamespace;
 
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
@@ -12,7 +11,7 @@ use Akat03\Scaffoldplus\Migrations\SyntaxBuilder;
 class MakeController
 {
     // use AppNamespaceDetectorTrait, MakerTrait;
-    use DetectsApplicationNamespace, MakerTrait;
+    use MakerTrait;
 
     protected $scaffoldCommandObj;
     protected $schema;
@@ -106,7 +105,7 @@ class MakeController
     private function replaceModelPath(&$stub)
     {
 
-        $model_name = $this->getAppNamespace() . $this->scaffoldCommandObj->getObjName('Name');
+        $model_name = \App::getNamespace() . $this->scaffoldCommandObj->getObjName('Name');
         $stub = str_replace('{{model_path}}', $model_name, $stub);
 
         return $this;

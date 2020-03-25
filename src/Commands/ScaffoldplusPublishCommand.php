@@ -10,7 +10,6 @@ use Akat03\Scaffoldplus\Makes\MakerTrait;
 use Akat03\Scaffoldplus\Makes\MakeSeed;
 use Akat03\Scaffoldplus\Makes\MakeView;
 use Illuminate\Console\Command;
-use Illuminate\Console\DetectsApplicationNamespace;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,7 +17,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 class ScaffoldplusPublishCommand extends Command
 {
-    use DetectsApplicationNamespace, MakerTrait;
+    use MakerTrait;
 
     /**
      * The console command name!

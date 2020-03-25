@@ -17,19 +17,12 @@
 
 
 @section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
 @endsection
 
 
 @section('content')
-
-    @foreach ( $crud_config->table_desc as $k => $v)
-        {{-- load select2.js --}}
-        @if ( preg_match("{hasMany|morphMany}",@$v->relation) )
-            <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
-            @break
-        @endif
-    @endforeach
 
 @if( Route::currentRouteName() == '{{prefix}}{{class}}.edit' )
 <form onsubmit="return notrepeat();" action="{{ route('{{prefix}}{{class}}.update', ${{classSingle}}->id) }}" method="POST" enctype="multipart/form-data">
