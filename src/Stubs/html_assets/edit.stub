@@ -116,8 +116,28 @@
                             // 未選択の時は [0 => null] を送信する
                             $('#relation__{{$k}}').on("select2:unselect", function(e){
                                 var unselected_value = $('#relation__{{$k}}').val();
-                                if ( unselected_value.length == 0 ){ $('#relation__{{$k}}').val([null]); }
+                                if ( unselected_value.length == 0 ){
+                                    // select2 に [0 => null] をセット（うまくいかないのでOFF）
+                                    // $('#relation__{{$k}}').val([null]);
+                                    // 同列に hidden を作成する
+                                    $('#relation__{{$k}}').after('<input type="hidden" id="relation__{{$k}}__hidden" name="relation__{{$k}}[]" value="">');
+                                }
                             }).trigger('change');
+
+                            // 選択した時は [0 => null] を削除する
+                            $('#relation__{{$k}}').on("select2:select", function(e){
+                                var selected_value = $('#relation__{{$k}}').val();
+                                if ( selected_value.length > 0 ){
+                                    // 同列の hidden を削除する
+                                    $('#relation__{{$k}}__hidden').remove();
+                                }
+                            }).trigger('change');
+
+                            // 未選択の時は [0 => null] を送信する
+                            // $('#relation__{{$k}}').on("select2:unselect", function(e){
+                            //     var unselected_value = $('#relation__{{$k}}').val();
+                            //     if ( unselected_value.length == 0 ){ $('#relation__{{$k}}').val([null]); }
+                            // }).trigger('change');
                         });
                         </script>
                     {{-- / リレーション --}}

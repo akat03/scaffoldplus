@@ -282,6 +282,27 @@ view_list_add_buttons_flag: 1
 # ===== 編集ボタンエリア を自由に定義する
 # view_list_edit_buttons_include: crud_edit_buttons.XXXXX_edit_buttons
 
+
+# ===== tab
+view_list_tab_group:
+    all:
+        column_name: project_status_id
+        value: null
+        tab_name: ALL
+    tab_2:
+        column_name: project_status_id
+        value: 1
+        tab_name: TAB Group 1
+    tab_3:
+        column_name: project_status_id
+        value: 2
+        tab_name: TAB Group 2
+    tab_4:
+        column_name: project_status_id
+        value: 3
+        tab_name: TAB Group 3
+
+
 # ==================== component ====================
 
 # ===== component file

@@ -26,10 +26,12 @@ return [
     'create_submit'                      => 'Submit',
     'edit'                               => 'Edit',
     'delete'                             => 'Delete',
+    'delete_confirm'                     => 'Delete :name. Are you shure?',
     'print'                              => 'Print',
     'search'                             => 'Search',
     'search_all'                         => 'Search all',
     'sort'                               => 'Sort',
     'component_file__attach_file_use'    => 'Use file',
     'component_file__attach_file_delete' => 'Delete file',
+    'mes__sort_01'                       => 'Drag items',
 ];

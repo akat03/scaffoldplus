@@ -1,5 +1,8 @@
 @extends('{{extends}}')
 
+@section('html_head_post')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+@endsection
 
 @php
     $back_relative_url = str_replace(url('/'),"",request()->fullUrl());
@@ -140,7 +143,7 @@
 <script type="text/javascript">
 var _global_crud_sort_url = '{{ Request::url() }}_exec_ajax';
 </script>
-<script src="{{ asset('/assets/vue/vue_sort.js') }}" ></script>
+<script src="{{ asset('/assets/js/vue/vue_sort.js') }}" ></script>
 
 
 

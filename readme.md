@@ -15,18 +15,8 @@ composer require akat03/scaffoldplus
 ```
 
 
-## 2. edit config/app.php and add 'providers'
 
-add ‘providers’ in file **config/app.php** .
-
-```
-    'providers' => [
-        ..........
-        ..........
-        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
-```
-
-## 3. edit .env file
+## 2. edit .env file
 
 change database settings in **.env** 
 
@@ -47,12 +37,12 @@ APP_URL=https://your-server.com
 
 
 
-## 4. clear Laravel and Composer cache 
+## 3. clear Laravel and Composer cache 
 ```
 php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
 ```
 
-## 5. show scaffolding command
+## 4. show scaffolding command
 ```
 php artisan
 ```
@@ -66,19 +56,13 @@ show some commands like below
 ```
 
 
-## 6. Add Form Helper
+
+## If you are using Laravel 5.4 
 
 
-**(PHP7)**
+### edit config/app.php and add 'providers'
 
-```
-composer require laravel/helpers
-```
-
-and goto next step.
-
-
-**(PHP5.6)**
+add **‘laravelcollective’**
 
 ```
 composer require "laravelcollective/html":"^5.4.0"
@@ -89,6 +73,7 @@ add **config/app.php**
 ```
     'providers' => [
         ........
+        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
         Collective\Html\HtmlServiceProvider::class,     // add this
     ],
 
@@ -99,6 +84,7 @@ add **config/app.php**
         'Html' => Collective\Html\HtmlFacade::class,     // add this
   ],
 ```
+
 
 
 

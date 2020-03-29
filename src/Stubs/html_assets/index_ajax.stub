@@ -37,7 +37,8 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h2 class="h6 mb-0">{{$page_title_header}}</h2>
-            <a href="#" onclick="data_create('{{class}}'); return false;" class="btn btn-sm btn-default"><i class="fa fa-edit"></i> @lang('excrud.create', ['tablename' => @$crud_config->table_title])</a>
+            <a href="#" onclick="data_create('{{class}}'); return false;" class="btn btn-sm btn-success" style="margin: 0 10px 0 auto;"><i class="fa fa-edit"></i> @lang('excrud.create_tablename', ['tablename' => @$crud_config->table_title])</a>
+            @if ( $crud_config->table_sort_sortable )<a class="btn btn-default pull-right" href="{{ route('{{class}}.sort') }}?_back_uri={{ str_replace(url('/'),"",request()->fullUrl()) }}"><i class="glyphicon glyphicon-plus"></i> @lang('excrud.sort')</a> @endif
         </div>
 
     <div class="card-body">
@@ -212,12 +213,12 @@ var vm = new Vue({
           // location.href = this.mydata.table_name + '_view.html';
           // console.log( this.$route );
           var back_uri = encodeURIComponent('/{{class}}/#' + this.$route.fullPath);
-          location.href = '/{{class}}/' + id + '?back_uri=' + back_uri ;
+          location.href = '/{{class}}/' + id + '?_back_uri=' + back_uri ;
         } ,
         rowEdit: function (id) {
           // location.href = this.mydata.table_name + '_edit.html';
           var back_uri = encodeURIComponent('/{{class}}/#' + this.$route.fullPath);
-          location.href = '/{{class}}/' + id + '/edit' + '?back_uri=' + back_uri ;
+          location.href = '/{{class}}/' + id + '/edit' + '?_back_uri=' + back_uri ;
         } ,
         rowDelete: function (row, modal_title) {
             // console.log( row );
@@ -231,24 +232,26 @@ var vm = new Vue({
 
                 axios.post(url, postdata)
                     .then((res) => {
-                        console.log( "axios.post を実行しました" );
-                        console.log( "vue.js データから削除" );
-                        // vue.js データから削除を実行
+                        // vue.js delete
                         this.deleteItemFromId(row.id);
-                        // 削除しました表示
-                       $("#result").hide()
+                        // fade in delete dialog
+                        $("#result").hide()
                                     .html('<div class="alert alert-danger"><button type="button" class="close">×</button>' + modal_title + 'を削除しました</div>')
                                     .fadeIn(500);
+                        // close btn
+                        $('.alert .close').on("click", function(e){
+                            $(this).parent().fadeTo(500, 0).slideUp(500);
+                         });
+                        // auto fadeout after 10sec
                         window.setTimeout(function() {
                             $(".alert").fadeTo(500, 0).slideUp(500, function(){
                                 $(this).remove();
                             });
                         }, 10000);
-
-
                     }).catch(err => {
                         console.log('err:', err);
                     });
+
             }
         } ,
        onUpdate() {
@@ -422,24 +425,6 @@ $('#modalConfirmDelete').on('show.bs.modal', function (event) {
     modal.find('.item-title').text(title);
   })
 
-
-// 削除後のアラート
-$(document).ready(function(){
-    $(".modal__delete_btn").click( function() {
-      //$.post( $("#updateunit").attr("action"),
-       // $("#updateunit :input").serializeArray(),function(info){
-       $("#result").html('<div class="alert alert-danger"><button type="button" class="close">×</button>データを削除しました</div>');
-        window.setTimeout(function() {
-            $(".alert").fadeTo(500, 0).slideUp(500, function(){
-                $(this).remove();
-            });
-        }, 30000);
-      $('.alert .close').on("click", function(e){
-            $(this).parent().fadeTo(500, 0).slideUp(500);
-         });
-      //});
-    });
-});
 
 
 </script>

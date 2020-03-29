@@ -26,10 +26,12 @@ return [
     'create_submit'                      => '登録する',
     'edit'                               => '編集',
     'delete'                             => '削除',
+    'delete_confirm'                     => ':nameを削除します。よろしいですか？',
     'print'                              => '印刷',
     'search'                             => '検索',
     'search_all'                         => '全て',
     'sort'                               => '順番変更',
     'component_file__attach_file_use'    => '変更しない',
     'component_file__attach_file_delete' => '削除する',
+    'mes__sort_01'                       => 'ドラッグして順番を入れ替えることが出来ます',
 ];

@@ -145,7 +145,15 @@ class {{class}} extends Controller {
 	 */
 	public function index_ajax( Request $request )
 	{
-		${{model_name_var}} = {{model_name_class}}::orderBy('id', 'desc')->get();
+		// CRUD
+	 	$client = new {{model_name_class}}();
+		$client->crud_set_json('yaml');
+		$crud_config = $client->get_crud_config();
+
+		$column    = @$crud_config->view_list_order_column ?: 'id';
+		$direction = @$crud_config->view_list_order_direction ?: 'DESC';
+
+		${{model_name_var}} = {{model_name_class}}::orderBy($column, $direction)->get();
 		return ${{model_name_var}}->toArray();
 	}
 
