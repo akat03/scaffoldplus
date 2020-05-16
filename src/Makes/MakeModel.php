@@ -309,8 +309,9 @@ view_list_tab_group:
 # input_type          : component_file
 # file_store_disk     : public
 # file_store_dir      : item
+# file_store_permission: public
 # file_store_base_name: item_{id}_01
-# view_list_php: $tmp_json = json_decode($item->multi_image_name,true); if (@$tmp_json){ echo "<a href='/cart/storage/item/{$tmp_json['file_name']}' target='_blank'>{$tmp_json['file_name']} / {$tmp_json['original_name']}</a>"; }
+# view_list_php: echo "<img width='128' src='" . $post->_onefile_url('img_file') . "'>";
 
 
 # ===== component summernote

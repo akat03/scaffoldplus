@@ -166,8 +166,8 @@ var vm = new Vue({
 
             } ,
             sortIcon : { base:'fa', up:'fa-chevron-up', down:'fa-chevron-down', is:'fa-sort' } ,
-            perPage       : 20 ,
-            perPageValues : [5,10,15,20,25,30,40,50,100] ,
+            perPage       : {{ $crud_config->view_list_limit_default }} ,
+            perPageValues : [{{ implode(',', $crud_config->view_list_limit_param) }}] ,  // [5,10,15,20,25,30,40,50,100]
         }
     } ,
     methods : {

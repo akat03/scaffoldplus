@@ -132,6 +132,10 @@ trait CrudControllerTrait
                     $ext = pathinfo($q[$k . '__attach']->getClientOriginalName(), PATHINFO_EXTENSION); // originalName から拡張子を取得
                     $store_file_name = str_replace("{id}", $id, $v->file_store_base_name) . ".{$ext}"; // ファイル名セット
                     $q[$k . '__attach']->storeAs($v->file_store_dir, $store_file_name, $v->file_store_disk); // パス名、ファイル名、ディスク名
+                    // パーミッションが設定されているときは設定する
+                    if (@$v->file_store_permission){
+                        \Storage::disk($v->file_store_disk)->setVisibility($v->file_store_dir."/".$store_file_name, $v->file_store_permission);
+                    }
                     $tmp = [
                         'disk' => $v->file_store_disk,
                         'dir' => $v->file_store_dir,
@@ -177,12 +181,10 @@ trait CrudControllerTrait
                 ])->save();
             }
         }
-// dd($request->all(), $model, $q);
-        // DBデータを更新
     }
 
     /**
-     * データ更新 時のファイルアップロード処理
+     * データ更新時のファイルアップロード処理
      *
      * @return   array       $q
      *
@@ -206,6 +208,10 @@ trait CrudControllerTrait
                     $ext = pathinfo($q[$k . '__attach']->getClientOriginalName(), PATHINFO_EXTENSION); // originalName から拡張子を取得
                     $store_file_name = str_replace("{id}", $id, $v->file_store_base_name) . ".{$ext}"; // ファイル名セット
                     $q[$k . '__attach']->storeAs($v->file_store_dir, $store_file_name, $v->file_store_disk); // パス名、ファイル名、ディスク名
+                    // パーミッションが設定されているときは設定する
+                    if (@$v->file_store_permission){
+                        \Storage::disk($v->file_store_disk)->setVisibility($v->file_store_dir."/".$store_file_name, $v->file_store_permission);
+                    }
                     $tmp = [
                         'disk' => $v->file_store_disk,
                         'dir' => $v->file_store_dir,

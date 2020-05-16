@@ -1,11 +1,11 @@
 <?php
 
-
 /**
- * Trait
+ * CrutTrait
  *
  * @version 0.3 [add] crud_has_input_type() method
  * @version 0.4 [add] crud_has_input_type() method
+ * @version 0.5 [add] _onefile_s3_signed_url() method
  *
  */
 
@@ -16,25 +16,19 @@ use Illuminate\Support\Facades\DB;
 
 trait CrudTrait
 {
-
     private $crud_config;
 
-
     /**
-     * CRUD情報jsonの読み込み
+     * load crud json
      * @return
      */
     public function crud_set_json( $format='json', $class_name = '' )
     {
         if (! $class_name ){
-            // ネームスペースを除いたクラス名を取得
-            $ar = explode('\\', __CLASS__);             // これだと　継承した時に 記述されたクラス名を取得してしまう
-            $ar = explode('\\', get_called_class());    // これでうまく行きます
+            // $ar = explode('\\', __CLASS__);          // ng
+            $ar = explode('\\', get_called_class());    // ok
             $class_name = end($ar);
         }
-// dump($class_name);
-// dd(get_called_class());
-// dump($class_name);
 
         if (strcmp($format, 'json') == 0 ){
             $url = __DIR__ . '/' . $class_name . '.json';
@@ -49,7 +43,6 @@ trait CrudTrait
             $this->crud_config = json_decode(json_encode($this->crud_config));
         }
     }
-
 
 
 
@@ -72,7 +65,6 @@ trait CrudTrait
         }
         return false;
     }
-
 
 
 
@@ -117,33 +109,6 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_storage_file_url('local', item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ local ディスク等 ）
-     *
-     * /file/show/201906171543__1094201681?path=app/auction
-     *
-     *
-     */
-    // public function _storage_file_url( string $disk_name='local', string $column_name, int $no ){
-    //     foreach ($this->attributes as $k => $v) {
-    //         if ( strcmp($column_name, $k) == 0 ){
-    //             if ( is_null($this->attributes[$k]) ){ return null; }
-    //             $json_array = json_decode( $this->attributes[$k], true );
-
-    //             if ( is_null($json_array) ){ return null; }
-    //             if ( ! isset($json_array[$no]) ){ return null; }
-
-    //             // dd( $json_array[$no] );
-    //             $json = $json_array[$no];
-    //             // dd( $json );
-    //             $disk = \Storage::disk($json['disk']);
-    //             return $disk->url("{$json['dir']}/{$json['file_name']}");
-    //         }
-    //     }
-    //     return null;
-    // }
-
-
-    /**
      * 独自メソッド : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
      *
      * @param   string      $column_name
@@ -154,15 +119,12 @@ trait CrudTrait
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
-// dd( $this->attributes[$k] );
                 $json_array = json_decode( $this->attributes[$k], true );
 
                 if ( is_null($json_array) ){ return null; }
                 if ( ! isset($json_array[$no]) ){ return null; }
 
-                // dd( $json_array[$no] );
                 $json = $json_array[$no];
-                // dd( $json );
                 $disk = \Storage::disk($json['disk']);
                 return "{$json['dir']}/{$json['file_name']}";
             }
@@ -183,7 +145,6 @@ trait CrudTrait
         foreach ($this->attributes as $k => $v) {
             if ( strcmp($column_name, $k) == 0 ){
                 if ( is_null($this->attributes[$k]) ){ return null; }
-// dd( $this->attributes[$k] );
                 $json_array = json_decode( $this->attributes[$k], true );
 
                 if ( is_null($json_array) ){ return null; }
@@ -226,7 +187,6 @@ trait CrudTrait
     }
 
 
-
     /**
      * 独自メソッド : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
      *
@@ -244,7 +204,6 @@ trait CrudTrait
     }
 
 
-
     /**
      * 独自メソッド : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
      *
@@ -260,7 +219,6 @@ trait CrudTrait
             return [ $i[0], $i[1]];
         }
     }
-
 
 
     /**
@@ -286,15 +244,47 @@ trait CrudTrait
     }
 
 
+    /**
+     * 独自メソッド : ->_onefile_s3_signed_url('item_files_name'); で　DBカラム「item_files_name」の 画像のS3 pre signed urlを返す（ s3 ディスクのみ ）
+     *
+     * @param   string      $column_name
+     *
+     */
+    public function _onefile_s3_signed_url( $column_name, string $expiry = "+10 minutes" ){
+        foreach ($this->attributes as $k => $v) {
+            if ( strcmp($column_name, $k) == 0 ){
+                if ( is_null($this->attributes[$k]) ){ return null; }
+                $json_array = json_decode( $this->attributes[$k], true );
 
+                if ( is_null($json_array) ){ return null; }
 
+                $json = $json_array;
+                if ( $json['disk'] !== "s3" ){ return null; }
+                else {
+                    $s3 = \Storage::disk('s3');
+                    $client = $s3->getDriver()->getAdapter()->getClient();
+                    // $expiry = "+10 minutes";
+
+                    $command = $client->getCommand('GetObject', [
+                        'Bucket' => env('AWS_BUCKET') ,
+                        'Key'    => "{$json['dir']}/{$json['file_name']}"
+                    ]);
+
+                    $request = $client->createPresignedRequest($command, $expiry);
+                    $signed_url = (string) $request->getUri();
+                    return $signed_url;
+                }
+
+            }
+        }
+        return null;
+    }
 
 
     public static function get_model_classname()
     {
         static::who(); // これで、遅延静的束縛が行われます
     }
-
 
 
 }
