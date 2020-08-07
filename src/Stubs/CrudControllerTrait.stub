@@ -12,6 +12,7 @@
  * @version 0.07  [fix] summernote を DOM 処理する時に html,body タグを自動孵化するよう変更
  * @version 0.071 [add] 検索機能 setSearchParam() マージ
  * @version 0.08  [fix] fileuploader 同名のファイルを 削除とアップロードを同時に行った時の不具合修正
+ * @version 0.09  [fix] TinyMCEコンポーネント追加
  *
  */
 
@@ -38,7 +39,6 @@ trait CrudControllerTrait
             $q['q'] = preg_replace("/\s+/"," ",$q['q']);
             $q['q'] = trim( $q['q'] );
             $q_array = preg_split("/\s/",$q['q']);
-// dump($q_array);
 
             // A.特定のカラム（$q['search_column']）を検索
             if ( @$q['search_column']){
@@ -104,8 +104,6 @@ trait CrudControllerTrait
     }
 
 
-
-
     /**
      * データ新規作成 保存時のファイルアップロード処理
      *
@@ -154,6 +152,7 @@ trait CrudControllerTrait
         return [$q, $uploaded_flag];
     }
 
+
     /**
      * データ新規作成のDB登録後のIDを受けて、アップロードファイル名、DBカラム内のファイル名変更
      *
@@ -182,6 +181,7 @@ trait CrudControllerTrait
             }
         }
     }
+
 
     /**
      * データ更新時のファイルアップロード処理
@@ -241,7 +241,6 @@ trait CrudControllerTrait
     }
 
 
-
     /**
      * データ削除 時のファイル削除処理
      *
@@ -253,9 +252,9 @@ trait CrudControllerTrait
     private function fileDeleteonDestroy($model)
     {
         $deleted_file_no = 0;
-        // dd( $model );
+        // dd( $model->toArray() );
         foreach ($model->toArray() as $k => $v) {
-            if (preg_match('/\{"disk":/', $v)) {
+            if ( @preg_match('/\{"disk":/', $v) ) {
                 $tmp_model_json = json_decode($v, true);
                 // ファイルが1つの場合
                 if (isset($tmp_model_json['disk'])){
@@ -276,7 +275,6 @@ trait CrudControllerTrait
     }
 
 
-
     /**
      * コンポーネント「component_summernote」 で入力エリアに画像がある時ファイル保存
      *
@@ -289,9 +287,11 @@ trait CrudControllerTrait
         if ($note_content==null){ return [null,null]; }
 
         // 保存ディスク設定読み込み
-        $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
-        $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
-        $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+        $file_store_disk       = $crud_config->table_desc->{$k}->file_store_disk;
+        $file_store_dir        = $crud_config->table_desc->{$k}->file_store_dir;
+        $file_store_column     = $crud_config->table_desc->{$k}->file_store_column;
+        $file_store_permission = @$crud_config->table_desc->{$k}->file_store_permission;
+        $file_store_url        = @$crud_config->table_desc->{$k}->file_store_url;
 
         // フォームデータ読み込み
         $content = $note_content;
@@ -329,6 +329,11 @@ trait CrudControllerTrait
             // file_put_contents($path, $data);
             \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $data);
 
+            // Amazon S3のパーミッションが設定されているときは設定する
+            if ( @$file_store_permission ){
+                \Storage::disk($file_store_disk)->setVisibility("{$file_store_dir}/{$image_name}", $file_store_permission);
+            }
+
             // ファイル情報取得
             $finfo = [
                 'disk'          => $file_store_disk ,
@@ -343,7 +348,15 @@ trait CrudControllerTrait
             $img->removeAttribute('data-filename');
 
             // $img->setAttribute('src', $image_name);
-            $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
+
+            // url書き換え jsonにfile_store_url がある場合はそれに沿って書き換える
+            if ( @$file_store_url ){
+                $img->setAttribute('src', str_replace("{file}", $image_name, $file_store_url) );
+            }
+            else {
+                $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
+            }
+
             $img->removeAttribute('style');         // style を削除
             // dump( $img->getAttribute('src') );
             // dd( $file_store_dir, $image_name, url(\Storage::disk($file_store_disk)->url("/{$file_store_dir}/{$image_name}")) );
@@ -375,7 +388,6 @@ trait CrudControllerTrait
     }
 
 
-
     /**
      * コンポーネント「component_summernote」 で UPDATE時に入力エリアから画像が削除されたかどうかをチェックし、削除されている場合はディスクから削除
      *
@@ -383,11 +395,11 @@ trait CrudControllerTrait
      * @param   array       $crud_config        Crud Config
      * @param   string      $k                  テーブル名
      * @param   DB Model    $data_already       変更前のDBデータ
+     * @param   string      $file_store_url     YAMLのfile_store_url（ここにセットされている場合は Amazon S3 Private）
      *
      */
-    private function summernoteFileCheckAndDelete($note_content, $crud_config, $k, $data_already)
+    private function summernoteFileCheckAndDelete($note_content, $crud_config, $k, $data_already, $file_store_url='' )
     {
-// dd( $data_already );
         // 保存ディスク設定読み込み
         $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
         $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
@@ -400,12 +412,25 @@ trait CrudControllerTrait
             // dump( $file_already_json_array );
             return;
         }
-
         // dump( $note_content, $crud_config, "summernoteカラム: ".$k, "summernoteの画像保存カラム: ".$file_store_column, $data_already[$file_store_column],$file_already_json_array );
+
+        // Amazon S3 Private
+        // yaml に file_store_url がセットされている場合は画像のURLを書き換えて削除ファイル判定を行う
+        if ( @$file_store_url ){
+            $match_string = $crud_config->table_desc->{$k}->file_store_url;
+            $match_string = preg_replace("/{file}/", '([a-zA-Z0-9\-_\.])+?', $match_string);
+            // $match_string = '(' . $match_string . ')';
+            // $match_string = '/s3/signed_url/estimate/.+.png';
+            $match_string    = '/s3/signed_url/estimate/';
+            $replace_string = 'https://' . env('AWS_BUCKET') . '.s3.' . env('AWS_DEFAULT_REGION') . '.amazonaws.com/' . $crud_config->table_desc->{$k}->file_store_dir .'/$1';
+            // dump( $match_string,$replace_string );
+            // dump( $note_content );
+            $note_content = preg_replace("/".preg_quote($match_string,'/')."([a-zA-Z0-9_\-\.]+)/", $replace_string, $note_content);
+        }
+
 
         $file_update_json_array = [];
         foreach ($file_already_json_array as $fk => $fv) {
-// dump( $fv );
             $file_already_url = url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$fv['file_name']}"));
             $pattern = '/' . preg_quote($file_already_url, '/') . '/';
             // dump( $fv,$file_already_url );
@@ -427,7 +452,6 @@ trait CrudControllerTrait
     }
 
 
-
     /**
      * コンポーネント「component_summernote」 ファイル保存
      *
@@ -446,85 +470,8 @@ trait CrudControllerTrait
                 // summernote用画像保存カラムにデータをセット
                 $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
                 $q[$file_store_column] = $files_info_json;
-
-
-                // // 保存ディスク設定読み込み
-                // $file_store_disk   = $crud_config->table_desc->{$k}->file_store_disk;
-                // $file_store_dir    = $crud_config->table_desc->{$k}->file_store_dir;
-                // $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
-
-                // // フォームデータ読み込み
-                // $content = $q[$k];
-                // // dd( $content );
-
-                // // $feature=$request->input('feature');
-                // // dd($request->all(),$content,$feature);
-
-                // $dom = new \DomDocument();
-
-                // // $dom->loadHtml($content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-                // $dom->loadHtml(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-                // $images = $dom->getElementsByTagName('img');
-
-                // $files_info = [];
-                // foreach ($images as $img_k => $img) {
-                //     $data = $img->getAttribute('src');
-                //     list($type, $data) = explode(';', $data);
-                //     list(, $data) = explode(',', $data);
-                //     $data = base64_decode($data);
-
-                //     // ファイル名
-                //     $dt = \Carbon\Carbon::now();
-                //     $image_name = $dt->format('YmdHi_') . '_' . mt_rand() . '.png';
-
-                //     // ファイル保存
-                //     // file_put_contents($path, $data);
-                //     \Storage::disk($file_store_disk)->put("{$file_store_dir}/{$image_name}", $data);
-
-                //     // ファイル情報取得
-                //     $finfo = [
-                //         'disk'          => $file_store_disk ,
-                //         'dir'           => $file_store_dir ,
-                //         'file_name'     => $image_name ,
-                //         'original_name' => $img->getAttribute('data-filename') ,
-                //         'size'          => \Storage::disk($file_store_disk)->size("{$file_store_dir}/{$image_name}") ,
-                //     ];
-                //     array_push( $files_info, $finfo );
-
-                //     $img->removeAttribute('src');
-                //     $img->removeAttribute('data-filename');
-
-                //     // $img->setAttribute('src', $image_name);
-                //     $img->setAttribute('src', url(\Storage::disk($file_store_disk)->url("{$file_store_dir}/{$image_name}")));
-                //     $img->removeAttribute('style');         // style を削除
-                //     dump( $img->getAttribute('src') );
-
-                //     // dd( $file_store_dir, $image_name, url(\Storage::disk($file_store_disk)->url("/{$file_store_dir}/{$image_name}")) );
-                // }
-
-                // // フォームの値を戻す
-                // $q[$k] = html_entity_decode($dom->saveHTML());
-                // // dump( $k,$q[$k] );
-
-                // // デバッグ用
-                // // $q[$k] = $content;
-                // // $q[$k] = str_replace("<p><br></p>","",$q[$k]);
-
-                // // dd( $content,$q[$k] );
-
-                // // 保存したファイル情報をセット
-                // if ( $files_info ){
-                //     $q[$file_store_column] = json_encode($files_info);
-                // }
-                // // {"disk":"public","dir":"testfile","file_name":"4_01.png","original_name":"2019_04_03\u8cea\u554f.png","size":846553}
-                // // dd($files_info);
             }
-// dump($q);
-
         }
-// dd($q);
-
         unset( $q['files']);
         return $q;
     }
@@ -544,7 +491,6 @@ trait CrudControllerTrait
 
                 // ● 1. summernoteの内容から削除された画像を割り出し、ファイルを削除する
                 list($note_content,$files_update_json) = $this->summernoteFileCheckAndDelete($q[$k], $crud_config, $k, $data_already);
-// dd( $note_content );
                 // summernote用画像保存カラムにデータをセット
                 $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
                 $q[$file_store_column] = $files_update_json;
@@ -553,7 +499,6 @@ trait CrudControllerTrait
                 // ● 2.summernoteの内容から画像を取り出す
                 // dd( $q[$k], $crud_config, $k );
                 list($note_content,$files_info_json) = $this->summernoteFileSave($q[$k], $crud_config, $k);
-// dd( $q[$k], $note_content );
              // 画像のbase64をファイル名に変換したものをセット
                 $q[$k] = $note_content;
 
@@ -575,12 +520,9 @@ trait CrudControllerTrait
                     $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
                     $q[$file_store_column] = $files_joined_json;
                 }
-
-
             }
 
         }
-
         // Delete summer note upload param name="files"
         unset( $q['files']);
 
@@ -588,7 +530,90 @@ trait CrudControllerTrait
     }
 
 
+    /**
+     * component「component_tinymce」 file save
+     *
+     * TinyMCE で 新規投稿保存時に画像ファイルがあった時の処理
+     */
+    private function storeComponentTinyMCE($q, $crud_config)
+    {
+        foreach ($q as $k => $v) {
+            if (preg_match("/^component_tinymce/", @$crud_config->table_desc->{$k}->input_type, $r) && $q[$k] ) {
+                // ● summernoteの内容から画像を取り出す
+                list($note_content,$files_info_json) = $this->summernoteFileSave($q[$k], $crud_config, $k);
+                // 画像のbase64をファイル名に変換したものをセット
+                $q[$k] = $note_content;
+                // summernote用画像保存カラムにデータをセット
+                $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                $q[$file_store_column] = $files_info_json;
+            }
+        }
+        unset( $q['files']);
+        return $q;
+    }
 
+
+    /**
+     * component「component_tinymce」 file update
+     *
+     * TinyMCE で 更新時時に画像ファイルがあった時の処理
+     */
+    private function updateComponentTinyMCE($q, $crud_config, $data_already)
+    {
+        foreach ($q as $k => $v) {
+
+            if (preg_match("/^component_tinymce/", @$crud_config->table_desc->{$k}->input_type, $r)) {
+
+                $note_content = '';
+                $files_update_json = '';
+
+                // ● 1. summernoteの内容から削除された画像を割り出し、ファイルを削除する
+                if ( @$crud_config->table_desc->{$k}->file_store_url ){
+                    // Amazon S3 Private の場合(yamlにfile_store_urlが指定してある場合)
+                    list($note_content,$files_update_json) = $this->summernoteFileCheckAndDelete($q[$k], $crud_config, $k, $data_already, @$crud_config->table_desc->{$k}->file_store_url );                    
+                }
+                else {
+                    // 通常のディスクまたは Amazon S3 Public の場合
+                    list($note_content,$files_update_json) = $this->summernoteFileCheckAndDelete($q[$k], $crud_config, $k, $data_already);                    
+                }
+
+                // summernote用画像保存カラムにデータをセット
+                $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                $q[$file_store_column] = $files_update_json;
+                // dd( $files_update_json );
+
+                // ● 2.summernoteの内容から画像を取り出す
+                // dd( $q[$k], $crud_config, $k );
+                list($note_content,$files_info_json) = $this->summernoteFileSave($q[$k], $crud_config, $k);
+             // 画像のbase64をファイル名に変換したものをセット
+                $q[$k] = $note_content;
+
+                // 新規登録された画像がある場合は既存のデータに追加
+                if ( $files_info_json ){
+                    $files_update_json_array = json_decode($files_update_json,true);
+                    $files_info_json_array   = json_decode($files_info_json,true);
+
+                    // 結合した joined_array を作成
+                    $joined_array = $files_update_json_array;
+                    if ($joined_array==null){ $joined_array = []; }
+                    foreach ($files_info_json_array as $fija_v) {
+                        array_push($joined_array,$fija_v);
+                    }
+                    $files_joined_json = json_encode($joined_array);
+                    // dd( $files_update_json_array );
+
+                    // summernote用画像保存カラムにデータをセット
+                    $file_store_column = $crud_config->table_desc->{$k}->file_store_column;
+                    $q[$file_store_column] = $files_joined_json;
+                }
+            }
+
+        }
+        // Delete summer note upload param name="files"
+        unset( $q['files']);
+
+        return $q;
+    }
 
 
 

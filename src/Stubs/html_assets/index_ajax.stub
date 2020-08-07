@@ -46,26 +46,30 @@
         <div id="app">
         <v-client-table :columns="columns" :data="data" :options="options" :mydata="mydata" ref="table">
 
-        <ul slot="projects_loop" slot-scope="props"  v-bind:href="'tel:' + props.row.projects_loop">
-            <li v-for="v in props.row.projects_loop"><a v-bind:href="'/projects/'+v.uuid_name">(% v.project_name %)</a></li>
-        </ul>
+            {{-- view_list_css_style or view_list_vue --}}
+            @foreach ($crud_config->table_desc as $tk => $tv)
+                @if (@$tv->view_list_vue_format && @$tv->view_list_vue)
+                    <span slot="{{ $tv->view_list_vue }}" slot-scope="props" style="{{ @$tv->view_list_css_style }}" @if(@$tv->view_list_css_class) class="{{ $tv->view_list_css_class }}" @endif>
+                        {!! $tv->view_list_vue_format !!}
+                    </span>
+                @elseif (@$tv->view_list_vue)
+                    <span slot="{{ $tv->view_list_vue }}" slot-scope="props" style="{{ @$tv->view_list_css_style }}" @if(@$tv->view_list_css_class) class="{{ $tv->view_list_css_class }}" @endif>
+                        @php
+                            $check_object_name = '';
+                            if ( preg_match("/(.+)\.([^\.]+?)$/",$tv->view_list_vue , $r) ){
+                                $check_object_name = "." . $r[1];
+                            }
+                        @endphp
+                        <span v-if="props.row{{ $check_object_name }}">(% props.row.{{ $tv->view_list_vue }} %)</span>
+                    </span>
+                @endif
+            @endforeach
 
-        <a slot="tel" slot-scope="props"  v-bind:href="'tel:' + props.row.tel">(%props.row.tel%)</a>
-
-        <ul slot="tanto_loop" slot-scope="props"  v-bind:href="'tel:' + props.row.tanto_loop">
-            <li v-for="v in props.row.tanto_loop">
-                <span>(% v.tanto_name %)</span>
-                <span class="ml20">(% v.tel_name %)</span>
-                <span class="ml20">(% v.email_name %)</span>
-            </li>
-        </ul>
-
-        <div slot="EDIT" slot-scope="props">
-        <button v-on:click="rowView(props.row.id)" type="button" class="btn btn-sm btn-primary">表示</button>
-        <button v-on:click="rowEdit(props.row.id)" type="button" class="btn btn-sm btn-success">編集</button>
-        <button v-on:click="rowDelete(props.row, props.row.id)" type="button" class="btn btn-sm btn-danger">削除</button>
-        {{-- <button v-on:click="rowDelete(props.row.id, props.row.id)" type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modalConfirmDelete" data-title="あいうえお">削除</button> --}}
-        </div>
+            <div slot="EDIT" slot-scope="props">
+                <button v-on:click="rowView(props.row.id)" type="button" class="btn btn-sm btn-primary">表示</button>
+                <button v-on:click="rowEdit(props.row.id)" type="button" class="btn btn-sm btn-success">編集</button>
+                <button v-on:click="rowDelete(props.row, props.row.id)" type="button" class="btn btn-sm btn-danger">削除</button>
+            </div>
         </v-client-table>
         </div>
 

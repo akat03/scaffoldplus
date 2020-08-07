@@ -321,6 +321,15 @@ view_list_tab_group:
 # file_store_column   : content_files
 
 
+# ===== component tinymce
+# input_type           : component_tinymce
+# file_store_disk      : s3
+# file_store_dir       : mydir
+# file_store_permission: private
+# file_store_url       : /s3/signed_url/mydir/{file}
+# file_store_column    : content_files
+
+
 # ===== component calendar（カレンダー）
 # input_type          : component_calendar
 
