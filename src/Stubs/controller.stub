@@ -336,6 +336,11 @@ class {{class}} extends Controller {
 			$q = $this->storeComponentSummernote($q, $crud_config);
 		}
 
+		// component_tinymce
+		if ( $model->crud_has_input_type('component_tinymce') ){
+			$q = $this->storeComponentTinyMCE($q, $crud_config);
+		}
+
 		// component_file
 		if ( $model->crud_has_input_type('component_file') ){
 			// file upload (戻り値の $q は $request->all() から添付ファイル関連を除いたもの)
@@ -471,6 +476,12 @@ class {{class}} extends Controller {
 		if ( $model->crud_has_input_type('component_summernote') ){
 			$data_already = {{model_name_class}}::findOrFail($id);
 			$q = $this->updateComponentSummernote($q, $crud_config, $data_already);
+		}
+
+		// component_tinymce
+		if ( $model->crud_has_input_type('component_tinymce') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentTinyMCE($q, $crud_config, $data_already);
 		}
 
 		// component_repeatable_form

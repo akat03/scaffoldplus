@@ -28,7 +28,7 @@
 <textarea name="{{$column_name}}" class="summernote form-control">{{$column_value}}</textarea>
 
 
-<script src="https://cdn.tiny.cloud/1/5gn3jroijknxj0wh969p8nksoykxfcrwgcpub78vuqf61055/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="https://cdn.tiny.cloud/1/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX_SET_YOUR_KEY/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
     tinymce.init({
 		contextmenu: "bold fontsizeselect forecolor code undo redo codesample removeformat",
