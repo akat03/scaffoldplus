@@ -288,7 +288,7 @@
 
                     {{-- ＊ component(new version) --}}
                     @elseif ( preg_match("/component_(.+)/",$v->input_type, $r) )
-                        @include("crud_components.{$r[1]}" ,[ 'column_name' => $k, 'column_value' => ${{classSingle}}[$k], 'class' => $class_name, 'crud_config' => $v] )
+                        @include("crud_components.{$r[1]}" ,[ 'column_name' => $k, 'column_value' => ${{classSingle}}[$k], 'class' => $class_name, 'crud_config' => $v, 'model' => ${{classSingle}}] )
                     @endif
 
                     {{-- 2. pre label --}}
