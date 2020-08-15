@@ -241,6 +241,11 @@
                         {{-- 直接 <select> を生成 --}}
                         @elseif ( @$v->input_values_array )
                             {{ Form::select($k, @$v->input_values_array, $_form_value, ['class' => @$v->input_css_class, 'style' => @$v->input_css_style]) }}
+                        @elseif ( @$v->input_values_php )
+                            @php
+                                $v->input_values_array = eval($v->input_values_php);
+                            @endphp
+                            {{ Form::select($k, @$v->input_values_array, $_form_value, ['class' => @$v->input_css_class, 'style' => @$v->input_css_style]) }}
                         {{-- / 直接 <select> を生成 --}}
                         @else
                             please set 'input_values_model', 'input_values_model__id_column', 'input_values_model__name_column' in  yaml file.
