@@ -248,6 +248,23 @@ $usage = <<< 'DOC_END'
 # input_css_style   : width:160px;
 
 
+# ===== ＜SELECT＞ を 直接生成（PHPによる値設定）
+# input_type        : select
+# input_values_php  : |
+#     $values = [ 
+#         '' => '選択してください' ,
+#     ];
+#     $dt_start = new \Carbon\Carbon('2009-01-01');
+#     $dt_end   = new \Carbon\Carbon();
+#     for ($i=0; $i<100; $i++){
+#         if ( $dt_start > $dt_end ){ break; }
+#         $year = $dt_start->format("Y");
+#         $values[$year] = $year;
+#         $dt_start->addYearNoOverflow();
+#     }
+#     return $values;
+
+
 # ===== ＜checkbox＞ の　値を指定
 # input_type: checkbox
 # input_checked_value: 1

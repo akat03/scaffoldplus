@@ -174,7 +174,7 @@
 
                                 <td class="text-right">
                                     @if ( @$crud_config->view_list_edit_buttons_include )
-                                        @include( $crud_config->view_list_edit_buttons_include, compact('q','shop') )
+                                        @include( $crud_config->view_list_edit_buttons_include, compact('q') )
                                     @else
                                         <a class="btn btn-xs btn-primary" href="{{ route('{{prefix}}{{class}}.show', ${{classSingle}}->id) }}?_back_uri={{ urlencode( str_replace(url('/'),"",request()->fullUrl()) ) }}"><i class="glyphicon glyphicon-eye-open"></i> @lang('excrud.show')</a>
                                         <a class="btn btn-xs btn-warning" href="{{ route('{{prefix}}{{class}}.edit', ${{classSingle}}->id) }}?_back_uri={{ urlencode( str_replace(url('/'),"",request()->fullUrl()) ) }}"><i class="glyphicon glyphicon-edit"></i> @lang('excrud.edit')</a>
