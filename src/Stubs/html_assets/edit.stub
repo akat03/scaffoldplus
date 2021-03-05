@@ -77,6 +77,11 @@
             @if ( (Route::currentRouteName() == '{{prefix}}{{class}}.create' and $v->view_add_flag == 1) or (Route::currentRouteName() == '{{prefix}}{{class}}.edit' and $v->view_edit_flag == 1) )
 
             @if ( @$v->view_edit_flag == 1 )
+
+                @if( @$v->table_header )
+                    <tr><th colspan="3" class="table_header"><h1 class="h6 mt10 mb5 bold">{!! $v->table_header !!}</h1></th></tr>
+                @endif
+
                 <tr>
                     <td>
                         {{ $v->view_list_title }}

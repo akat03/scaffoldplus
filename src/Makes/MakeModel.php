@@ -300,6 +300,10 @@ view_list_add_buttons_flag: 1
 # view_list_edit_buttons_include: crud_edit_buttons.XXXXX_edit_buttons
 
 
+# ===== 項目の区切りヘッダーをつける
+table_header: <div>ヘッダー名称未設定 <small></small></div>
+
+
 # ===== tab
 view_list_tab_group:
     all:
