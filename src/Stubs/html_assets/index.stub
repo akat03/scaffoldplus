@@ -192,30 +192,32 @@
                 </table>
 
                 <hr>
-                <!-- ===== pagination ===== -->
-                @php
-                    if ( ! $crud_config->view_list_limit_param ){
-                        $crud_config->view_list_limit_param   = [10,20,25,30,50,100];
-                    }
-                @endphp
 
-                <div>
-                    <div style="float:left; padding-top:5px; margin-right:15px;">
-                        @if(\Lang::get('excrud.list_limit_pre')!='') <p style="float:left; margin:0 5px; padding-top:2px;">@lang('excrud.list_limit_pre')</p> @endif
-                        <select style="float:left" id="limit" onchange="change_limit();">
-                        @foreach ($crud_config->view_list_limit_param as $lpv)
-                            <option value="{{$lpv}}" @if( @$q['limit'] == $lpv) selected @endif>{{$lpv}}</option>
-                        @endforeach
-                        </select>
-                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_limit_post')</p>
-                        <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_total',['no'=>${{class}}_rows->appends($pagination_params)->total()])</p>
-                        <p class="index_sort_name">@lang('excrud.list_order') ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')@lang('excrud.list_desc') @else @lang('excrud.list_asc') @endif) </p>
+                @if ( @$crud_config->view_list_pagination_flag !== 0 )
+                    <!-- ===== pagination ===== -->
+                    @php
+                        if ( ! $crud_config->view_list_limit_param ){
+                            $crud_config->view_list_limit_param   = [10,20,25,30,50,100];
+                        }
+                    @endphp
+                    <div>
+                        <div style="float:left; padding-top:5px; margin-right:15px;">
+                            @if(\Lang::get('excrud.list_limit_pre')!='') <p style="float:left; margin:0 5px; padding-top:2px;">@lang('excrud.list_limit_pre')</p> @endif
+                            <select style="float:left" id="limit" onchange="change_limit();">
+                            @foreach ($crud_config->view_list_limit_param as $lpv)
+                                <option value="{{$lpv}}" @if( @$q['limit'] == $lpv) selected @endif>{{$lpv}}</option>
+                            @endforeach
+                            </select>
+                            <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_limit_post')</p>
+                            <p style="float:left; margin-left:5px; padding-top:2px;">@lang('excrud.list_total',['no'=>${{class}}_rows->appends($pagination_params)->total()])</p>
+                            <p class="index_sort_name">@lang('excrud.list_order') ({{ $crud_config->view_list_order_column }} , @if($crud_config->view_list_order_direction == 'DESC')@lang('excrud.list_desc') @else @lang('excrud.list_asc') @endif) </p>
+                        </div>
+                        <div class="mx-auto" style="width: 400px;">
+                            {!! ${{class}}_rows->appends($pagination_params)->links('pagination.default') !!}
+                        </div>
                     </div>
-                    <div class="mx-auto" style="width: 400px;">
-                        {!! ${{class}}_rows->appends($pagination_params)->links('pagination.default') !!}
-                    </div>
-                </div>
-                <!-- ===== / pagination ===== -->
+                    <!-- ===== / pagination ===== -->
+                @endif
 
             @else
                 <h3 class="h6 text-center alert alert-info">Empty!</h3>

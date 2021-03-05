@@ -295,6 +295,9 @@ $usage = <<< 'DOC_END'
 # ===== 新規登録ボタンを表示するかどうか？ 1:表示する　0:表示しない　（何も指定しないときは 表示する）
 view_list_add_buttons_flag: 1
 
+# ===== 一覧リストでページネーションを表示するかどうか？ 1:表示する　0:表示しない　（何も指定しないときは 表示する）
+view_list_pagination_flag: 1
+
 
 # ===== 編集ボタンエリア を自由に定義する
 # view_list_edit_buttons_include: crud_edit_buttons.XXXXX_edit_buttons
@@ -365,7 +368,10 @@ view_list_tab_group:
 # file_store_dir      : img_files_name
 # component_option    : 'data-fileuploader-limit="1"'
 
+# file_showlocalfile_url: /admin/file/showlocalfile/?path=
+
 #view_list_php: echo "<img width='48' src='" . $item->_file_url('img_files_name',0) . "'>" . "<br><small>画像 " . $organizer->_file_count('img_files_name') . '</small>';
+
 
 
 
