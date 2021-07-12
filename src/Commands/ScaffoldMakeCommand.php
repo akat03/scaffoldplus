@@ -177,7 +177,13 @@ class ScaffoldMakeCommand extends Command {
 		$this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", "' . $this->getObjName("Name") . 'Controller@destroy_ajax")->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
 		$this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", "' . $this->getObjName("Name") . 'Controller@index_ajax")->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
 		$this->info('Route::get("' . $this->getObjName("names") . '/search", "' . $this->getObjName("Name") . 'Controller@search")->name("' . $this->getObjName("names") . '.search");');
-		$this->info('Route::resource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'Controller");');
+		$laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}","$1", app()->version() );
+		if ( $laravel_major_version >= 8 ){
+			$this->info('Route::resource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . 'Controller::class);');
+		}
+		else {
+			$this->info('Route::resource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'Controller");');
+		}
 		$this->info("==================== Add this\n");
 	}
 
