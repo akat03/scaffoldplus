@@ -171,6 +171,8 @@ class ScaffoldMakeCommand extends Command {
 		$this->composer->dumpAutoloads();
 
 		$this->info("\n==================== Add this to ./routes/web.php");
+		$this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'Controller;' . "\n");
+
 		$this->info('Route::get("' . $this->getObjName("names") . '/dl_delete_submit", "' . $this->getObjName("Name") . 'Controller@dl_delete_submit")->name("' . $this->getObjName("names") . '.dl_delete_submit"); // multiple delete');
 		$this->info('Route::post("' . $this->getObjName("names") . '/sort_exec_ajax", "' . $this->getObjName("Name") . 'Controller@sort_exec_ajax")->name("' . $this->getObjName("names") . '.sort_exec_ajax"); // sort exec');
 		$this->info('Route::get("' . $this->getObjName("names") . '/sort", "' . $this->getObjName("Name") . 'Controller@sort")->name("' . $this->getObjName("names") . '.sort"); // sort view');
