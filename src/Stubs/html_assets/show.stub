@@ -45,6 +45,11 @@
 
                         <td>
                             {{ $v->view_list_title }}
+                            @if ( isset($crud_config->view_column_name_in_show_php) )
+                                @php
+                                    $crud_config->view_column_name_in_show = eval ('return '.$crud_config->view_column_name_in_show_php);
+                                @endphp
+                            @endif
                             @if ( $crud_config->view_column_name_in_show == 1 )
                             <span class="column_name">( {{ $v->name }} )</span>
                             @endif

@@ -47,12 +47,12 @@
 
 <style type="text/css">
 .crud_table tr td:nth-of-type(1){
-    width: 25%;
+    width: 20%;
 }
 .crud_table tr td:nth-of-type(3){
     font-size: smaller;
     color:#777;
-    width: 25%;
+    width: 20%;
 }
 </style>
 
@@ -85,6 +85,11 @@
                 <tr>
                     <td>
                         {{ $v->view_list_title }}
+                        @if ( isset($crud_config->view_column_name_in_edit_php) )
+                            @php
+                                $crud_config->view_column_name_in_edit = eval ('return '.$crud_config->view_column_name_in_edit_php);
+                            @endphp
+                        @endif
                         @if ( $crud_config->view_column_name_in_edit == 1 )
                             <span class="column_name">( {{ $v->name }} )</span>
                         @endif

@@ -327,6 +327,12 @@ view_list_tab_group:
         tab_name: TAB Group 3
 
 
+# ===== write setting in .env
+view_column_name_in_show_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_SHOW");
+view_column_name_in_edit_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_EDIT");
+
+        
+
 # ==================== component ====================
 
 # ===== component file
@@ -345,13 +351,23 @@ view_list_tab_group:
 # file_store_column   : content_files
 
 
-# ===== component tinymce
+# ===== component tinymce (Amazon S3 Disk)
 # input_type           : component_tinymce
 # file_store_disk      : s3
 # file_store_dir       : mydir
 # file_store_permission: private
 # file_store_url       : /s3/signed_url/mydir/{file}
 # file_store_column    : content_files
+
+
+# ===== component tinymce (Local Disk)
+input_type           : component_tinymce
+file_store_disk      : local
+file_store_dir       : event__common_tiny_mce_files
+file_store_permission: private
+file_store_url       : /cms/admin/file/showlocalfile/?path=event__common_tiny_mce_files/{file}
+file_store_column    : common_tiny_mce_files
+# https://amita.numd.me/cms/admin/file/showlocalfile/?path=event__common_tiny_mce_files/202103081241__365188157.png
 
 
 # ===== component calendar（カレンダー）
