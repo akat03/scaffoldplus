@@ -1,6 +1,6 @@
 {
 	"name": "akat03/scaffoldplus",
-	"description": "Scaffold , CRUD Package for Laravel 5/6/7",
+	"description": "Scaffold , CRUD Package for Laravel 5/6/7/8",
 	"keywords": ["laravel", "generators", "scaffold" , "crud"],
 	"license": "MIT",
 	"minimum-stability": "dev",
