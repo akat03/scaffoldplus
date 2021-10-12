@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Akat03\Scaffoldplus\Makes\MakeController;
+use Akat03\Scaffoldplus\Makes\MakeApiController;
 use Akat03\Scaffoldplus\Makes\MakeLayout;
 use Akat03\Scaffoldplus\Makes\MakeMigration;
 use Akat03\Scaffoldplus\Makes\MakeModel;
@@ -15,7 +16,8 @@ use Akat03\Scaffoldplus\Makes\MakeView;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 
-class ScaffoldMakeCommand extends Command {
+class ScaffoldMakeCommand extends Command
+{
 	use MakerTrait;
 
 	/**
@@ -64,7 +66,8 @@ class ScaffoldMakeCommand extends Command {
 	 * @param Filesystem $files
 	 * @param Composer $composer
 	 */
-	public function __construct(Filesystem $files, Composer $composer) {
+	public function __construct(Filesystem $files, Composer $composer)
+	{
 		parent::__construct();
 
 		$this->files = $files;
@@ -77,7 +80,8 @@ class ScaffoldMakeCommand extends Command {
 	 *
 	 * @return mixed
 	 */
-	public function fire() {
+	public function fire()
+	{
 		// Start Scaffold
 		$this->info('Configuring ' . $this->getObjName("Name") . '...');
 
@@ -91,6 +95,7 @@ class ScaffoldMakeCommand extends Command {
 		$this->makeSeed();
 		$this->makeModel();
 		$this->makeController();
+		$this->makeApiController();
 		$this->makeViewLayout();
 		$this->makeViews();
 	}
@@ -99,21 +104,24 @@ class ScaffoldMakeCommand extends Command {
 	/**
 	 * Generate the desired migration.
 	 */
-	protected function makeMigration() {
+	protected function makeMigration()
+	{
 		new MakeMigration($this, $this->files);
 	}
 
 	/**
 	 * Generate an Eloquent model, if the user wishes.
 	 */
-	protected function makeModel() {
+	protected function makeModel()
+	{
 		new MakeModel($this, $this->files);
 	}
 
 	/**
 	 * Generate a Seed
 	 */
-	private function makeSeed() {
+	private function makeSeed()
+	{
 		new MakeSeed($this, $this->files);
 	}
 
@@ -122,7 +130,8 @@ class ScaffoldMakeCommand extends Command {
 	 *
 	 * @return array
 	 */
-	protected function getArguments() {
+	protected function getArguments()
+	{
 		return [
 			['name', InputArgument::REQUIRED, 'The name of the model. (Ex: Post)'],
 		];
@@ -133,32 +142,44 @@ class ScaffoldMakeCommand extends Command {
 	 *
 	 * @return array
 	 */
-	protected function getOptions() {
+	protected function getOptions()
+	{
 		return [
 			['schema', 's', InputOption::VALUE_REQUIRED, 'Schema to generate scaffold files. (Ex: --schema="title:string")', null],
 			['form', 'f', InputOption::VALUE_OPTIONAL, 'Use Illumintate/Html Form facade to generate input fields', false],
 			['prefix', 'p', InputOption::VALUE_OPTIONAL, 'Generate schema with prefix', false],
 
 			['extends', 'e', InputOption::VALUE_OPTIONAL, 'Generate view files with extends', false],
-			['crud_format', 'c', InputOption::VALUE_OPTIONAL, 'Generate view files with extends', false],
+			['crud_format', 'c', InputOption::VALUE_OPTIONAL, 'Select CRUD option file from one of the following (json or yaml)', false],
 			['stubs', 'stubs', InputOption::VALUE_OPTIONAL, 'Set the stub directory', false],
+			['addapi', 'addapi', InputOption::VALUE_OPTIONAL, 'Generate API Controller', 'not generate'],
 		];
 	}
 
 	/**
 	 * Make a Controller with default actions
 	 */
-	private function makeController() {
+	private function makeController()
+	{
 
 		new MakeController($this, $this->files);
+	}
 
+	/**
+	 * Make a APIController with default actions
+	 */
+	private function makeApiController()
+	{
+
+		new MakeApiController($this, $this->files);
 	}
 
 	/**
 	 * Setup views and assets
 	 *
 	 */
-	private function makeViews() {
+	private function makeViews()
+	{
 
 		foreach ($this->views as $view) {
 			// index, create, show, edit
@@ -179,14 +200,23 @@ class ScaffoldMakeCommand extends Command {
 		$this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", "' . $this->getObjName("Name") . 'Controller@destroy_ajax")->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
 		$this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", "' . $this->getObjName("Name") . 'Controller@index_ajax")->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
 		$this->info('Route::get("' . $this->getObjName("names") . '/search", "' . $this->getObjName("Name") . 'Controller@search")->name("' . $this->getObjName("names") . '.search");');
-		$laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}","$1", app()->version() );
-		if ( $laravel_major_version >= 8 ){
-			$this->info('Route::resource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . 'Controller::class);');
-		}
-		else {
+		$laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+		if ($laravel_major_version >= 8) {
+			$this->info('Route::resource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . '\App\Http\Controllers\Controller::class);');
+		} else {
 			$this->info('Route::resource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'Controller");');
 		}
 		$this->info("==================== Add this\n");
+
+		$this->info("\n==================== Add this to ./routes/api.php");
+		if ($laravel_major_version >= 8) {
+			$this->info('Route::apiResource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . '\App\Http\Controllers\ApiController::class);');
+		} else {
+			$this->info('Route::apiResource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'ApiController");');
+		}
+		$this->info("==================== Add this\n");
+
+
 	}
 
 	/**
@@ -194,7 +224,8 @@ class ScaffoldMakeCommand extends Command {
 	 *
 	 * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
 	 */
-	private function makeViewLayout() {
+	private function makeViewLayout()
+	{
 		new MakeLayout($this, $this->files);
 	}
 
@@ -202,7 +233,8 @@ class ScaffoldMakeCommand extends Command {
 	 * Get access to $meta array
 	 * @return array
 	 */
-	public function getMeta() {
+	public function getMeta()
+	{
 		return $this->meta;
 	}
 
@@ -213,7 +245,8 @@ class ScaffoldMakeCommand extends Command {
 	 * @return mixed
 	 * @throws \Exception
 	 */
-	public function getObjName($config = 'Name') {
+	public function getObjName($config = 'Name')
+	{
 
 		$names = [];
 		$args_name = $this->argument('name');
@@ -232,11 +265,10 @@ class ScaffoldMakeCommand extends Command {
 		};
 
 		return $names[$config];
-
 	}
 
-	public function handle() {
+	public function handle()
+	{
 		return $this->fire();
 	}
-
 }

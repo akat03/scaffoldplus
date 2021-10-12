@@ -1,0 +1,275 @@
+<?php
+
+namespace App\Http\Controllers{{prefix_namespace}};
+
+use App\Http\Requests;
+use App\Http\Controllers\Controller;
+
+use {{model_path}};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use DB;
+
+class {{class}} extends Controller {
+
+
+	// File Upload Trait
+	use \App\Http\Controllers\CrudControllerTrait;
+
+	protected $search_columns;
+
+	{{validation_text}}
+
+
+	function __construct(){
+		// $this->setSearchColumnsFromCrud();
+	}
+
+
+	/**
+	 * API index
+	 * @return Response
+	 */
+	public function index( Request $request )
+	{
+		// CRUD
+	 	$client = new {{model_name_class}}();
+		$client->crud_set_json('yaml');
+		$crud_config = $client->get_crud_config();
+
+		$column    = @$crud_config->view_list_order_column ?: 'id';
+		$direction = @$crud_config->view_list_order_direction ?: 'DESC';
+
+		${{model_name_var}} = {{model_name_class}}::orderBy($column, $direction)->get();
+		return ${{model_name_var}}->toJson(JSON_UNESCAPED_UNICODE);
+	}
+
+
+	/**
+	 * API store
+	 *
+	 * @param Request $request
+	 * @return Response
+	 */
+	public function store(Request $request)
+	{
+		$this->validate($request, $this->validation_column);
+
+		$model = new {{model_name_class}}();
+
+		$model->crud_set_json('yaml');
+		$crud_config = $model->get_crud_config();
+
+		$q = $request->all();
+
+		// component_fileuploader
+		if ( $model->crud_has_input_type('component_fileuploader') ){
+			$q = $this->storeComponentFileuploader($q, $crud_config);
+		}
+
+		// component_summernote
+		if ( $model->crud_has_input_type('component_summernote') ){
+			$q = $this->storeComponentSummernote($q, $crud_config);
+		}
+
+		// component_tinymce
+		if ( $model->crud_has_input_type('component_tinymce') ){
+			$q = $this->storeComponentTinyMCE($q, $crud_config);
+		}
+
+		// component_file
+		if ( $model->crud_has_input_type('component_file') ){
+			// file upload (戻り値の $q は $request->all() から添付ファイル関連を除いたもの)
+			list($q, $uploaded_flag) = $this->fileUploadonStore( $q, $model );
+		}
+
+		// component_repeatable_form
+		if ( $model->crud_has_input_type('component_repeatable_form') ){
+			$q = $this->storeComponentRepeatableForm($q, $crud_config);
+		}
+
+
+		// リレーション用のカラム ( relation__<PARAM> ) は insertデータから除外
+		foreach ($q as $k => $v) {
+			if ( preg_match("/^relation__(.+)/",$k) ){
+				unset($q[$k]);
+			}
+		}
+
+		// DB INSERT
+		$model->fill( $q );
+		$model->save();
+
+		// upload file rename
+		if ( @$uploaded_flag === true ){
+			$this->fileRenameonStore( $request, $model, $q );
+		}
+
+		// ===== relation(hasMany update)
+		$q = $request->all();
+		foreach ($q as $k => $v) {
+			if (preg_match("/^relation__(.+)/",$k,$r)){
+				$id = $model->id;
+				$crud_key = $r[1];
+				$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+				$crud_config = $model->get_crud_config();
+				$this->relationHasManyUpdate($id, $v, $model, $crud_config->table_desc->{$crud_key});
+				// unset($q[$k]);
+			}
+        }
+
+        return response('store OK', 200);
+	}
+
+
+	/**
+	 * API show
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function show(Request $request, $id)
+	{
+		${{model_name_var_sgl}} = {{model_name_class}}::findOrFail($id);
+		$_back_uri = $request->input('_back_uri');
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+		return ${{model_name_var_sgl}}->toJson(JSON_UNESCAPED_UNICODE);
+	}
+
+
+
+
+	/**
+	 * relation (HasMany) update
+	 *
+	 * @version 	0.2 	[fix] $form_values が [ 0 => null ] の配列の時は未選択 の処理とするよう修正
+	 *
+	 */
+	private function relationHasManyUpdate(int $id, array $form_values, $model, $crud_relation_confing)
+	{
+		// $form_values が [ 0 => null ] の配列の時は未選択
+		if (count($form_values)==1 && $form_values[0]== null){
+			$form_values = [];
+		}
+
+		$relation_method = $crud_relation_confing->relation_method;
+
+		// ピボットテーブルを指定した配列のデータで更新（すでにあるデータを書き換え）
+		$model->{$relation_method}()->sync($form_values);
+	}
+
+
+
+	/**
+	 * Update the specified resource in storage.
+	 * @param  int 			$id
+	 * @param  Request 		$request
+	 * @return Response
+	 */
+	public function update(Request $request, $id)
+	{
+		$this->validate($request, $this->validation_column);
+		$model = {{model_name_class}}::findOrFail($id);
+
+		// file upload
+		$q = $this->fileUploadonUpdate($request, $model, $id);
+
+
+		// crud config
+		$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+		$crud_config = $model->get_crud_config();
+
+		// component_fileuploader
+		if ( $model->crud_has_input_type('component_fileuploader') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentFileuploader($q, $crud_config, $data_already);
+		}
+
+		// component_summernote
+		if ( $model->crud_has_input_type('component_summernote') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentSummernote($q, $crud_config, $data_already);
+		}
+
+		// component_tinymce
+		if ( $model->crud_has_input_type('component_tinymce') ){
+			$data_already = {{model_name_class}}::findOrFail($id);
+			$q = $this->updateComponentTinyMCE($q, $crud_config, $data_already);
+		}
+
+		// component_repeatable_form
+		if ( $model->crud_has_input_type('component_repeatable_form') ){
+			$q = $this->updateComponentRepeatableForm($q, $crud_config);
+		}
+
+
+		// relation(hasMany update)
+		${{model_name_var_sgl}} = (object)$q;
+		foreach (${{model_name_var_sgl}} as $k => $v) {
+			if (preg_match("/^relation__(.+)/",$k,$r)){
+				$crud_key = $r[1];
+				$this->relationHasManyUpdate($id, $v, $model, $crud_config->table_desc->{$crud_key});
+				unset($q[$k]);
+			}
+        }
+
+		// YAML edit_save_param
+		foreach ($crud_config->table_desc as $k => $v) {
+			if ( @$v->edit_save_param ){
+				${{model_name_var_sgl}}->$k = eval( "return @" . $v->edit_save_param . ";" );
+			}
+        }
+
+		$model->fill( $q );
+
+		$model->save();
+
+        return response('update OK', 200);
+
+	}
+
+
+
+	/**
+	 * API destroy
+	 * @param  int  $id
+	 * @return Response
+	 */
+	public function destroy(Request $request, $id)
+	{
+        // ========== transaction ==========
+        $result_array = DB::transaction( function () use ($id) {
+
+        	$result_array = [];
+
+			// ===== model
+			$model = {{model_name_class}}::findOrFail($id);
+
+			// ===== relation(hasMany delete)
+			$model->crud_set_json('yaml','{{model_name_class}}');	// yaml を指定
+			$crud_config = $model->get_crud_config();
+			foreach ($crud_config->table_desc as $k => $v) {
+				if ( @$v->relation != null ){
+					$relation_method = $v->relation_method;
+					$detach_result = $model->{$relation_method}()->detach();
+					array_push($result_array, "{$v->relation_pivot_model} : {$detach_result}" );
+				}
+			}
+
+			// ===== delete data
+			$delete_result = $model->delete();
+			array_push($result_array, "{{model_name_class}} : {$delete_result}" );
+
+			// ===== delete file
+			$q = $this->fileDeleteonDestroy($model);
+
+			return $result_array;
+        });
+        // ========== / transaction ==========
+
+        return response('destroy OK', 200);
+	}
+
+
+}
+
