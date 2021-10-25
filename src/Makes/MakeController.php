@@ -69,7 +69,7 @@ class MakeController
      */
     protected function compileControllerStub()
     {
-        $stub = $this->files->get(__DIR__ . '/../Stubs/apicontroller.stub');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/controller.stub');
 
         $this->replaceClassName($stub, "controller")
             ->replaceModelPath($stub)
@@ -164,8 +164,6 @@ class MakeController
             $schema = (new SchemaParser)->parse($schema);
         }
 
-        // 2018_08_06 add by econosys system
-        // validation ?????
         $this->schema = $schema;
 
         $this->schema_not_null = array_filter($schema, function($hash){
@@ -213,7 +211,6 @@ foreach ($this->schema as $k => $v) {
 // DOC_END;
     }
 
-    // 2019_04_21 econosys system
     if ( preg_match("{(datetime|date)}i", @$v['type']) ){
         if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|date'); }
         else{ array_push($validation_array, 'date'); }

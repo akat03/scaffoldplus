@@ -1,14 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: fernandobritofl
- * Date: 4/21/15
- * Time: 4:58 PM
- * Modified: 2018_08_06 econosys-system.com
- */
 
 namespace Akat03\Scaffoldplus\Makes;
-
 
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
@@ -37,35 +29,35 @@ class MakeView
     private function start()
     {
         $this->generateView($this->viewName); // index, show, edit and create
-        $this->generatePagination();          // pagination modified by econosys-system
-        $this->generateView('index_ajax');    // index_ajax modified by econosys-system
-        $this->generateView('sort');    // index_ajax modified by econosys-system
+        $this->generatePagination();          // pagination
+        $this->generateView('index_ajax');    // index_ajax
+        $this->generateView('sort');          // index_ajax
     }
 
 
     protected function getSchemaArray()
     {
-      if($this->scaffoldCommandObj->option('schema') != null){
-        if ($schema = $this->scaffoldCommandObj->option('schema')) {
-          $this->schemaArray = (new SchemaParser)->parse($schema);
+        if ($this->scaffoldCommandObj->option('schema') != null) {
+            if ($schema = $this->scaffoldCommandObj->option('schema')) {
+                $this->schemaArray = (new SchemaParser)->parse($schema);
+            }
         }
-      }
     }
 
 
-    protected function generateView($nameView = 'index'){
+    protected function generateView($nameView = 'index')
+    {
         // Get path
-        $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-'.$nameView);
+        $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-' . $nameView);
 
-        if ( $nameView == 'index_ajax'){
-          $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-index');
-          $path = preg_replace("{index\.blade\.php}","index_ajax.blade.php",$path);
-          // dd($nameView,$path);
-        }
-        elseif ( $nameView == 'sort'){
-          $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-index');
-          $path = preg_replace("{index\.blade\.php}","sort.blade.php",$path);
-          // dd($nameView,$path);
+        if ($nameView == 'index_ajax') {
+            $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-index');
+            $path = preg_replace("{index\.blade\.php}", "index_ajax.blade.php", $path);
+            // dd($nameView,$path);
+        } elseif ($nameView == 'sort') {
+            $path = $this->getPath($this->scaffoldCommandObj->getObjName('names'), 'view-index');
+            $path = preg_replace("{index\.blade\.php}", "sort.blade.php", $path);
+            // dd($nameView,$path);
         }
 
         // dump($nameView . ": " . $path);
@@ -85,11 +77,12 @@ class MakeView
     }
 
 
-    protected function generatePagination( $nameView = 'pagination' ){
+    protected function generatePagination($nameView = 'pagination')
+    {
         // Get path
         $path = $this->getPath('pagination', 'view-index');
         // dump($path);
-        $path = preg_replace("{pagination/index\.blade\.php}","pagination/default.blade.php", $path);
+        $path = preg_replace("{pagination/index\.blade\.php}", "pagination/default.blade.php", $path);
         // dump($path);
         // Create directory
         $this->makeDirectory($path);
@@ -124,7 +117,7 @@ class MakeView
 
         // command line option 'stubs'
         $option_stubs = $this->scaffoldCommandObj->option('stubs');
-        if ( $option_stubs ){
+        if ($option_stubs) {
             $option_stubs = rtrim($option_stubs, '/') . '/';
             $stub_dir = $option_stubs;
         }
@@ -132,33 +125,28 @@ class MakeView
 
 
         // $stub = $this->files->get(__DIR__ . '/../Stubs/html_assets/'.$nameView.'.stub');
-        $stub = $this->files->get($stub_dir . 'html_assets/'.$nameView.'.stub');
+        $stub = $this->files->get($stub_dir . 'html_assets/' . $nameView . '.stub');
 
-        if($nameView == 'show'){
+        if ($nameView == 'show') {
             // show.blade.php
             $this->replaceName($stub)
                 ->replaceSchemaShow($stub);
-
-        } elseif($nameView == 'edit'){
+        } elseif ($nameView == 'edit') {
             // edit.blade.php
             $this->replaceName($stub)
                 ->replaceSchemaEdit($stub);
-
-        } elseif($nameView == 'create'){
+        } elseif ($nameView == 'create') {
             // edit.blade.php
             $this->replaceName($stub)
                 ->replaceSchemaCreate($stub);
-
-        } elseif($nameView == 'pagination'){
+        } elseif ($nameView == 'pagination') {
             // pagination/index.blade.php
             $this->replaceName($stub)
                 ->replaceSchemaPagination($stub);
-
-        } elseif($nameView == 'index_ajax'){
+        } elseif ($nameView == 'index_ajax') {
             // pagination/index_ajax.blade.php
             $this->replaceName($stub)
                 ->replaceSchemaPagination($stub);
-
         } else {
             // index.blade.php
             $this->replaceName($stub)
@@ -166,8 +154,8 @@ class MakeView
         }
 
         // Laravel 5.4
-        if( version_compare( app()->version(), '5.5', '<') ){
-            $this->replaceOldBladeSyntax( $stub );
+        if (version_compare(app()->version(), '5.5', '<')) {
+            $this->replaceOldBladeSyntax($stub);
         }
 
         return $stub;
@@ -183,7 +171,7 @@ class MakeView
      */
     protected function replaceOldBladeSyntax(&$stub)
     {
-        echo("Info: You are using Laravel " . app()->version() . " . replace Blade Syntax.\n" );
+        echo ("Info: You are using Laravel " . app()->version() . " . replace Blade Syntax.\n");
         $stub = str_replace('@php', '<?php ', $stub);
         $stub = str_replace('@endphp', '?>', $stub);
         $stub = str_replace('@csrf', '<input type="hidden" name="_token" value="{{ csrf_token() }}"', $stub);
@@ -207,19 +195,21 @@ class MakeView
 
         // prefix
         $prefix           = $this->scaffoldCommandObj->option('prefix');
-        $prefix           = str_replace('"','',$prefix);
+        $prefix           = str_replace('"', '', $prefix);
 
         if ($prefix != null)
-            $stub = str_replace('{{prefix}}',$prefix.'.', $stub);
+            $stub = str_replace('{{prefix}}', $prefix . '.', $stub);
         else
             $stub = str_replace('{{prefix}}', '', $stub);
 
         // extends
         $extends = $this->scaffoldCommandObj->option('extends');
-        $extends = str_replace('"','',$extends);
+        $extends = str_replace('"', '', $extends);
 
-        if ($extends == null) { $extends='layout'; }
-        $stub = str_replace('{{extends}}',$extends, $stub);
+        if ($extends == null) {
+            $extends = 'layout';
+        }
+        $stub = str_replace('{{extends}}', $extends, $stub);
 
 
         return $this;
@@ -305,11 +295,10 @@ class MakeView
 
         // Create view index content fields
         $schema = (new SyntaxBuilder)->create($this->schemaArray, $this->scaffoldCommandObj->getMeta(), 'view-edit-content', $this->scaffoldCommandObj->option('form'));
-// dd($schema);
+        // dd($schema);
         $stub = str_replace('{{content_fields}}', $schema, $stub);
 
         return $this;
-
     }
 
 
@@ -328,7 +317,5 @@ class MakeView
         $stub = str_replace('{{content_fields}}', $schema, $stub);
 
         return $this;
-
     }
-
 }

@@ -208,13 +208,17 @@ class ScaffoldMakeCommand extends Command
 		}
 		$this->info("==================== Add this\n");
 
-		$this->info("\n==================== Add this to ./routes/api.php");
-		if ($laravel_major_version >= 8) {
-			$this->info('Route::apiResource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . '\App\Http\Controllers\ApiController::class);');
-		} else {
-			$this->info('Route::apiResource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'ApiController");');
+		$addapi = $this->option('addapi');
+		if ($addapi !== 'not generate') {
+			$this->info("\n==================== Add this to ./routes/api.php");
+			$this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'ApiController;' . "\n");
+			if ($laravel_major_version >= 8) {
+				$this->info('Route::apiResource("' . $this->getObjName("names") . '", ' .$this->getObjName("Name")  . 'ApiController::class);');
+			} else {
+				$this->info('Route::apiResource("' . '","' . $this->getObjName("Name") . $this->getObjName("names")  .  'ApiController");');
+			}
+			$this->info("==================== Add this\n");
 		}
-		$this->info("==================== Add this\n");
 
 
 	}

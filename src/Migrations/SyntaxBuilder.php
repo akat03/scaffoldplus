@@ -4,7 +4,6 @@ namespace Akat03\Scaffoldplus\Migrations;
 
 use Akat03\Scaffoldplus\GeneratorException;
 
-
 /**
  * Class SyntaxBuilder with modifications by Fernando
  * @package Akat03\Scaffoldplus\Migrations
@@ -30,7 +29,8 @@ class SyntaxBuilder
      *
      * @param $value
      */
-    public function setIllumination($value) {
+    public function setIllumination($value)
+    {
         $this->illuminate = $value;
     }
 
@@ -54,39 +54,30 @@ class SyntaxBuilder
             $up = $this->createSchemaForUpMethod($schema, $meta);
             $down = $this->createSchemaForDownMethod($schema, $meta);
             return compact('up', 'down');
-
-
         } else if ($type == "controller") {
 
             $fieldsc = $this->createSchemaForControllerMethod($schema, $meta);
             return $fieldsc;
-
-
         } else if ($type == "view-index-header") {
 
             $fieldsc = $this->createSchemaForViewMethod($schema, $meta, 'index-header');
             return $fieldsc;
-
         } else if ($type == "view-index-content") {
 
             $fieldsc = $this->createSchemaForViewMethod($schema, $meta, 'index-content');
             return $fieldsc;
-
         } else if ($type == "view-show-content") {
 
             $fieldsc = $this->createSchemaForViewMethod($schema, $meta, 'show-content');
             return $fieldsc;
-
         } else if ($type == "view-edit-content") {
 
             $fieldsc = $this->createSchemaForViewMethod($schema, $meta, 'edit-content');
             return $fieldsc;
-
         } else if ($type == "view-create-content") {
 
             $fieldsc = $this->createSchemaForViewMethod($schema, $meta, 'create-content');
             return $fieldsc;
-
         } else {
             throw new \Exception("Type not found in syntaxBuilder");
         }
@@ -256,20 +247,16 @@ class SyntaxBuilder
             }
 
             $syntax .= ';';
-
-
         } elseif ($type == 'view-index-header') {
 
             // Fields to index view
             $syntax = sprintf("<th>%s", strtoupper($field['name']));
             $syntax .= '</th>';
-
         } elseif ($type == 'view-index-content') {
 
             // Fields to index view
             $syntax = sprintf("<td>{{\$%s->%s", $meta['var_name'], strtolower($field['name']));
             $syntax .= '}}</td>';
-
         } elseif ($type == 'view-show-content') {
 
             // // Fields to show view
@@ -279,7 +266,7 @@ class SyntaxBuilder
             //     str_repeat(' ', 16) . "</div>", strtolower($field['name']), strtoupper($field['name']), $meta['var_name'], strtolower($field['name']));
 
             // Fields to show view
-/*
+            /*
             <table class="table table-bordered">
                 <tr>
                     <th>id</th>
@@ -287,13 +274,16 @@ class SyntaxBuilder
                 </tr>
 */
 
-            $syntax = sprintf('<tr>' ."\n" .
-                str_repeat(' ', 20) . "<th>%s <!--%s--> </th>\n" .
-                str_repeat(' ', 20) . "<td>{{\$%s->%s}}</td>\n" .
-                str_repeat(' ', 16) . '</tr>' ."\n"
-                , strtolower($field['name']), strtoupper($field['name']), $meta['var_name'], strtolower($field['name']));
-
-
+            $syntax = sprintf(
+                '<tr>' . "\n" .
+                    str_repeat(' ', 20) . "<th>%s <!--%s--> </th>\n" .
+                    str_repeat(' ', 20) . "<td>{{\$%s->%s}}</td>\n" .
+                    str_repeat(' ', 16) . '</tr>' . "\n",
+                strtolower($field['name']),
+                strtoupper($field['name']),
+                $meta['var_name'],
+                strtolower($field['name'])
+            );
         } elseif ($type == 'view-edit-content') {
             $syntax = $this->buildField($field, $type, $meta['var_name']);
         } elseif ($type == 'view-create-content') {
@@ -324,12 +314,12 @@ class SyntaxBuilder
         if ($value === true) {
             $value = '$' . $variable . '->' . $column;
         } else {
-            $value = 'old("'.$column.'")';
+            $value = 'old("' . $column . '")';
         }
 
         $syntax = [];
 
-        switch($type) {
+        switch ($type) {
             case 'string':
             default:
                 $input = 'text';
@@ -339,10 +329,10 @@ class SyntaxBuilder
                 break;
         }
 
-        $syntax[] = '<div class="form-group @if($errors->has('."'". $column . "'".')) has-error @endif">';
+        $syntax[] = '<div class="form-group @if($errors->has(' . "'" . $column . "'" . ')) has-error @endif">';
         $syntax[] = '   <label for="' . $column . '-field">' . $title . '</label>';
 
-        if($this->illuminate) {
+        if ($this->illuminate) {
             $syntax[] = '   {!! Form::' . $input . '("' . $column . '", ' . $value . ', array("class" => "form-control", "id" => "' . $column . '-field")) !!}';
         } else {
             $syntax[] = $this->htmlField($column, $variable, $field, $type);
@@ -353,7 +343,7 @@ class SyntaxBuilder
         $syntax[] = '   @endif';
         $syntax[] = '</div>';
 
-        return join("\n".str_repeat(' ', 20), $syntax);
+        return join("\n" . str_repeat(' ', 20), $syntax);
     }
 
 
@@ -417,19 +407,15 @@ class SyntaxBuilder
             // index-content
             return implode("\n" . str_repeat(' ', 20), $fields);
         }
-
     }
 
     private function htmlField($column, $variable, $field, $type)
     {
 
-        $value = '{{ old("'.$column.'") }}';
+        $value = '{{ old("' . $column . '") }}';
 
-        if($type == 'view-edit-content')
-        {
-            // OLD $value = '{{ is_null(old("'.$column.'")) ? $'.$variable.'->'.$column.' : old("'.$column.'") }}';
-            // 2018_08_06 modified by econosys system
-            $value = "{{ old('" . $column ."', " . "$" . $variable . '->' . $column . ") }}";
+        if ($type == 'view-edit-content') {
+            $value = "{{ old('" . $column . "', " . "$" . $variable . '->' . $column . ") }}";
         }
 
         switch ($field['type']) {
@@ -450,5 +436,4 @@ class SyntaxBuilder
 
         return $layout;
     }
-
 }

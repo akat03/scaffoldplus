@@ -44,6 +44,12 @@ class GeneratorsServiceProvider extends ServiceProvider {
 			return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusPublishCommand'];
 		});
 		$this->commands('command.scaffoldplus.publish');
+
+		$this->app->singleton('command.scaffoldplus.nextjs', function ($app) {
+			return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusNextjsCommand'];
+		});
+		$this->commands('command.scaffoldplus.nextjs');
+
 	}
 
 
