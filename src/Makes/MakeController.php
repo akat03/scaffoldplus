@@ -1,4 +1,5 @@
 <?php
+
 namespace Akat03\Scaffoldplus\Makes;
 
 // use Illuminate\Console\AppNamespaceDetectorTrait;
@@ -7,6 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 use Akat03\Scaffoldplus\Migrations\SchemaParser;
 use Akat03\Scaffoldplus\Migrations\SyntaxBuilder;
+use Akat03\Scaffoldplus\libs\ScaffoldplusLib;
 
 class MakeController
 {
@@ -45,20 +47,20 @@ class MakeController
 
         // save CrudControllerTrait
         $trait_path = './app/Http/Controllers/CrudControllerTrait.php';
-        if ( ! is_file($trait_path) ){
-            $this->files->put($trait_path,  $this->files->get(__DIR__ . '/../Stubs/CrudControllerTrait.stub') );
+        if (!is_file($trait_path)) {
+            $this->files->put($trait_path,  $this->files->get(__DIR__ . '/../Stubs/CrudControllerTrait.stub'));
         }
 
         // save language files
-        $lang_path_ja = './resources/lang/ja/excrud.php';
-        if ( ! is_file($lang_path_ja) ){
-            if ( ! is_dir( dirname($lang_path_ja) ) ){ mkdir( dirname($lang_path_ja) ); }
-            $this->files->put($lang_path_ja,  $this->files->get(__DIR__ . '/../Stubs/resources/lang/ja/excrud.php') );
+        $lang_path_ja = ScaffoldplusLib::getLangDir() . '/ja/excrud.php';
+        if (!is_file($lang_path_ja)) {
+            if (!is_dir(dirname($lang_path_ja))) {
+                mkdir(dirname($lang_path_ja));
+            }
+            $this->files->put($lang_path_ja,  $this->files->get(__DIR__ . '/../Stubs/resources/lang/ja/excrud.php'));
         }
 
         $this->scaffoldCommandObj->info('Controller created successfully.');
-
-        //$this->composer->dumpAutoloads();
     }
 
 
@@ -109,7 +111,6 @@ class MakeController
         $stub = str_replace('{{model_path}}', $model_name, $stub);
 
         return $this;
-
     }
 
 
@@ -119,30 +120,31 @@ class MakeController
         $model_name       = $this->scaffoldCommandObj->getObjName('name');
         $model_names      = $this->scaffoldCommandObj->getObjName('names');
         $prefix           = $this->scaffoldCommandObj->option('prefix');
-        $prefix           = str_replace('"','',$prefix);
-        $prefix_namespace = "\\".ucfirst($prefix);
+        $prefix           = str_replace('"', '', $prefix);
+        $prefix_namespace = "\\" . ucfirst($prefix);
 
-// dd($model_name_uc,$model_name,$model_names,$prefix,$prefix_namespace);
+        // dd($model_name_uc,$model_name,$model_names,$prefix,$prefix_namespace);
 
 
         $stub = str_replace('{{model_name_class}}', $model_name_uc, $stub);
         $stub = str_replace('{{model_name_var_sgl}}', $model_name, $stub);
         $stub = str_replace('{{model_name_var}}', $model_names, $stub);
 
-        if ($prefix != null){
-            $stub = str_replace('{{prefix}}', $prefix.'.', $stub);
+        if ($prefix != null) {
+            $stub = str_replace('{{prefix}}', $prefix . '.', $stub);
             $stub = str_replace('{{prefix_namespace}}', $prefix_namespace, $stub);         // 2019_01_29
-        }
-        else {
+        } else {
             $stub = str_replace('{{prefix}}', '', $stub);
             $stub = str_replace('{{prefix_namespace}}', '', $stub);
         }
 
         // crud_format
         $crud_format = $this->scaffoldCommandObj->option('crud_format');
-        $crud_format = str_replace('"','',$crud_format);
+        $crud_format = str_replace('"', '', $crud_format);
 
-        if ($crud_format == null){ $crud_format = 'json'; }
+        if ($crud_format == null) {
+            $crud_format = 'json';
+        }
         $stub = str_replace('{{crud_format}}', $crud_format, $stub);
 
 
@@ -166,8 +168,8 @@ class MakeController
 
         $this->schema = $schema;
 
-        $this->schema_not_null = array_filter($schema, function($hash){
-            return ( ! (@$hash['options']['nullable'] === true) );
+        $this->schema_not_null = array_filter($schema, function ($hash) {
+            return (!(@$hash['options']['nullable'] === true));
         });
 
         $this->createValidation($stub);
@@ -193,53 +195,60 @@ class MakeController
     protected function createValidation(&$stub, $type = 'migration')
     {
 
-$validation_text = <<< 'DOC_END'
+        $validation_text = <<< 'DOC_END'
 protected $validation_column = [
 
 DOC_END;
 
-// dd($this->schema, $this->schema_not_null);
+        // dd($this->schema, $this->schema_not_null);
 
-foreach ($this->schema as $k => $v) {
+        foreach ($this->schema as $k => $v) {
 
-    $validation_array = [];
-    if ( ! (@$v['options']['nullable'] == true) ){
-        array_push($validation_array, 'required');
-// $validation_text .= <<< DOC_END
-//             '{$v['name']}'  => 'required',
+            $validation_array = [];
+            if (!(@$v['options']['nullable'] == true)) {
+                array_push($validation_array, 'required');
+                // $validation_text .= <<< DOC_END
+                //             '{$v['name']}'  => 'required',
 
-// DOC_END;
-    }
+                // DOC_END;
+            }
 
-    if ( preg_match("{(datetime|date)}i", @$v['type']) ){
-        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|date'); }
-        else{ array_push($validation_array, 'date'); }
-    }
+            if (preg_match("{(datetime|date)}i", @$v['type'])) {
+                if ((@$v['options']['nullable'] == true)) {
+                    array_push($validation_array, 'nullable|date');
+                } else {
+                    array_push($validation_array, 'date');
+                }
+            }
 
-    if ( preg_match("{integer}i", @$v['type']) ){
-        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|integer'); }
-        else{ array_push($validation_array, 'integer'); }
-    }
-    if ( @$v['type'] == 'decimal' or @$v['type'] == 'double' or @$v['type'] == 'float' ){
-        if ( (@$v['options']['nullable'] == true) ){ array_push($validation_array, 'nullable|numeric'); }
-        else{ array_push($validation_array, 'numeric'); }
-    }
+            if (preg_match("{integer}i", @$v['type'])) {
+                if ((@$v['options']['nullable'] == true)) {
+                    array_push($validation_array, 'nullable|integer');
+                } else {
+                    array_push($validation_array, 'integer');
+                }
+            }
+            if (@$v['type'] == 'decimal' or @$v['type'] == 'double' or @$v['type'] == 'float') {
+                if ((@$v['options']['nullable'] == true)) {
+                    array_push($validation_array, 'nullable|numeric');
+                } else {
+                    array_push($validation_array, 'numeric');
+                }
+            }
 
 
-    $validation_param = join('|',$validation_array);
-    $validation_text .= <<< DOC_END
+            $validation_param = join('|', $validation_array);
+            $validation_text .= <<< DOC_END
             '{$v['name']}'  => '{$validation_param}',\n
 DOC_END;
+        }
 
-}
+        // dd($validation_text);
 
-// dd($validation_text);
-
-$validation_text .= <<< 'DOC_END'
+        $validation_text .= <<< 'DOC_END'
         ];
 DOC_END;
 
         $this->validation_text = $validation_text;
     }
-
 }

@@ -2,25 +2,18 @@
 
 namespace Akat03\Scaffoldplus\Commands;
 
-use Akat03\Scaffoldplus\Makes\MakeController;
-use Akat03\Scaffoldplus\Makes\MakeLayout;
-use Akat03\Scaffoldplus\Makes\MakeMigration;
-use Akat03\Scaffoldplus\Makes\MakeModel;
 use Akat03\Scaffoldplus\Makes\MakerTrait;
-use Akat03\Scaffoldplus\Makes\MakeSeed;
-use Akat03\Scaffoldplus\Makes\MakeView;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputOption;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
-class ScaffoldplusNextjsCommand extends Command
+class ScaffoldplusReactTsCommand extends Command
 {
     use MakerTrait;
 
-    protected $signature = 'scaffoldplus:nextjs {yaml_file_name}';
+    protected $signature = 'scaffoldplus:react-ts {yaml_file_name}';
 
 
     /**
@@ -28,14 +21,14 @@ class ScaffoldplusNextjsCommand extends Command
      *
      * @var string
      */
-    protected $name = 'scaffoldplus:nextjs';
+    protected $name = 'scaffoldplus:react-ts';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = '[Front End] Create Next.js files from YAML';
+    protected $description = '[Front End] Create React(TypeScript) files from YAML';
 
 
     /**
@@ -61,15 +54,15 @@ class ScaffoldplusNextjsCommand extends Command
      */
     public function fire(string $model_name, $yaml)
     {
-        // 0. check top /scaffoldplus_nextjs/ folder
-        $baseSourceDir      = __DIR__ . '/../Stubs/nextjs';
-        $baseDestinationDir = base_path('scaffoldplus_nextjs');
+        // 0. check top /scaffoldplus_react-ts/ folder
+        $baseSourceDir      = __DIR__ . '/../Stubs/react-ts';
+        $baseDestinationDir = base_path('scaffoldplus_react-ts');
 
         if (!is_dir($baseDestinationDir)) {
             $success = File::makeDirectory($baseDestinationDir);
         }
 
-        // 1. copy  /nextjs/components  folder
+        // 1. copy  /react-ts/components  folder
         $SourceDir      = $baseSourceDir      . '/components';
         $DestinationDir = $baseDestinationDir . '/components';
 
@@ -87,11 +80,11 @@ class ScaffoldplusNextjsCommand extends Command
             $destinationFile = str_replace('[model_name]', $model_name, $destinationFile);
             File::copy($file->getRealPath(), $destinationFile);
         }
-        $this->info("\ncopied  scaffoldplus_nextjs/components/");
+        $this->info("\ncopied  scaffoldplus_react-ts/components/");
 
 
 
-        // 2. copy  /nextjs/data  folder
+        // 2. copy  /react-ts/data  folder
         $SourceDir      = $baseSourceDir      . '/data';
         $DestinationDir = $baseDestinationDir . '/data';
 
@@ -105,10 +98,10 @@ class ScaffoldplusNextjsCommand extends Command
             $destinationFile = str_replace('[model_name]', $model_name, $destinationFile);
             File::copy($file->getRealPath(), $destinationFile);
         }
-        $this->info("copied  scaffoldplus_nextjs/data/");
+        $this->info("copied  scaffoldplus_react-ts/data/");
 
 
-        // 3. copy  /nextjs/helpers  folder
+        // 3. copy  /react-ts/helpers  folder
         $SourceDir      = $baseSourceDir      . '/helpers';
         $DestinationDir = $baseDestinationDir . '/helpers';
 
@@ -122,10 +115,10 @@ class ScaffoldplusNextjsCommand extends Command
             $destinationFile = str_replace('[model_name]', $model_name, $destinationFile);
             File::copy($file->getRealPath(), $destinationFile);
         }
-        $this->info("copied  scaffoldplus_nextjs/helpers/");
+        $this->info("copied  scaffoldplus_react-ts/helpers/");
 
 
-        // 4. copy  /nextjs/pages  folder
+        // 4. copy  /react-ts/pages  folder
         $SourceDir      = $baseSourceDir      . '/pages';
         $DestinationDir = $baseDestinationDir . '/pages';
 
@@ -151,10 +144,10 @@ class ScaffoldplusNextjsCommand extends Command
             $destinationFile = str_replace('[model_name]', $model_name, $destinationFile);
             File::copy($file->getRealPath(), $destinationFile);
         }
-        $this->info("copied  scaffoldplus_nextjs/pages/");
+        $this->info("copied  scaffoldplus_react-ts/pages/");
 
 
-        // 5. copy  /nextjs/helpers  folder
+        // 5. copy  /react-ts/helpers  folder
         $SourceDir      = $baseSourceDir      . '/services';
         $DestinationDir = $baseDestinationDir . '/services';
 
@@ -168,21 +161,22 @@ class ScaffoldplusNextjsCommand extends Command
             $destinationFile = str_replace('[model_name]', $model_name, $destinationFile);
             File::copy($file->getRealPath(), $destinationFile);
         }
-        $this->info("copied  scaffoldplus_nextjs/services/");
+        $this->info("copied  scaffoldplus_react-ts/services/");
     }
 
     public function handle()
     {
         $yaml_file_name = $this->argument('yaml_file_name');
+        $yaml_full_path = base_path($yaml_file_name);
 
-        if (!is_file(base_path($yaml_file_name))) {
+        if (!is_file($yaml_full_path)) {
             echo "\n";
-            echo "scaffoldplus ERROR: yaml_file_name ({$yaml_file_name}) is not exists.";
+            echo "scaffoldplus ERROR: yaml_file_name ({$yaml_full_path}) is not exists.";
             echo "\n\n";
         } else {
             // model_name
-            $model_name = \Str::lower(pathinfo($yaml_file_name, PATHINFO_FILENAME));
-            $model_name = \Str::plural($model_name);
+            $model_name = Str::lower(pathinfo($yaml_file_name, PATHINFO_FILENAME));
+            $model_name = Str::plural($model_name);
 
             // parse yaml
             $input_src = file_get_contents($yaml_file_name);
