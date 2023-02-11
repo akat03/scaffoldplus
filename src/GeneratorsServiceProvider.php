@@ -4,55 +4,53 @@ namespace Akat03\Scaffoldplus;
 
 use Illuminate\Support\ServiceProvider;
 
-class GeneratorsServiceProvider extends ServiceProvider
-{
+class GeneratorsServiceProvider extends ServiceProvider {
 
-    /**
-     * Bootstrap the application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        //
+	/**
+	 * Bootstrap the application services.
+	 *
+	 * @return void
+	 */
+	public function boot()
+	{
+		//
 
-    }
+	}
 
-    /**
-     * Register the application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
+	/**
+	 * Register the application services.
+	 *
+	 * @return void
+	 */
+	public function register()
+	{
 
-        $this->registerScaffoldGenerator();
-    }
+		$this->registerScaffoldGenerator();
+
+	}
 
 
-    /**
-     * Register the make:scaffold generator.
-     */
-    private function registerScaffoldGenerator()
-    {
-        $this->app->singleton('command.larascaf.scaffold', function ($app) {
-            return $app['Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand'];
-        });
-        $this->commands('command.larascaf.scaffold');
+	/**
+	 * Register the make:scaffold generator.
+	 */
+	private function registerScaffoldGenerator()
+	{
+		$this->app->singleton('command.larascaf.scaffold', function ($app) {
+			return $app['Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand'];
+		});
+		$this->commands('command.larascaf.scaffold');
 
-        $this->app->singleton('command.scaffoldplus.publish', function ($app) {
-            return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusPublishCommand'];
-        });
-        $this->commands('command.scaffoldplus.publish');
+		$this->app->singleton('command.scaffoldplus.publish', function ($app) {
+			return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusPublishCommand'];
+		});
+		$this->commands('command.scaffoldplus.publish');
 
-        $this->app->singleton('command.scaffoldplus.nextjs', function ($app) {
-            return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusNextjsCommand'];
-        });
-        $this->commands('command.scaffoldplus.nextjs');
+		$this->app->singleton('command.scaffoldplus.nextjs', function ($app) {
+			return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusNextjsCommand'];
+		});
+		$this->commands('command.scaffoldplus.nextjs');
 
-        $this->app->singleton('command.scaffoldplus.react-ts', function ($app) {
-            return $app['Akat03\Scaffoldplus\Commands\ScaffoldplusReactTsCommand'];
-        });
-        $this->commands('command.scaffoldplus.react-ts');
-    }
+	}
+
+
 }

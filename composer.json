@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"minimum-stability": "dev",
 	"require": {
-		"laravel/framework": "~8.0" ,
+		"laravel/framework": "*" ,
 		"laravel/helpers": "*" ,
 		"symfony/yaml": "*" ,
 		"laravelcollective/html": "*"

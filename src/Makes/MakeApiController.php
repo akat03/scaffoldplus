@@ -6,6 +6,7 @@ use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 use Akat03\Scaffoldplus\Migrations\SchemaParser;
 use Akat03\Scaffoldplus\Migrations\SyntaxBuilder;
+use Akat03\Scaffoldplus\libs\ScaffoldplusLib;
 
 class MakeApiController
 {
@@ -55,7 +56,7 @@ class MakeApiController
         }
 
         // save language files
-        $lang_path_ja = './resources/lang/ja/excrud.php';
+        $lang_path_ja = ScaffoldplusLib::getLangDir() . '/ja/excrud.php';
         if (!is_file($lang_path_ja)) {
             if (!is_dir(dirname($lang_path_ja))) {
                 mkdir(dirname($lang_path_ja));

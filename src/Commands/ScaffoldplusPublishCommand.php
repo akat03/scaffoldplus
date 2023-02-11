@@ -2,11 +2,20 @@
 
 namespace Akat03\Scaffoldplus\Commands;
 
+use Akat03\Scaffoldplus\Makes\MakeController;
+use Akat03\Scaffoldplus\Makes\MakeLayout;
+use Akat03\Scaffoldplus\Makes\MakeMigration;
+use Akat03\Scaffoldplus\Makes\MakeModel;
 use Akat03\Scaffoldplus\Makes\MakerTrait;
+use Akat03\Scaffoldplus\Makes\MakeSeed;
+use Akat03\Scaffoldplus\Makes\MakeView;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Illuminate\Support\Facades\File;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+
 
 class ScaffoldplusPublishCommand extends Command
 {
@@ -92,21 +101,10 @@ class ScaffoldplusPublishCommand extends Command
 
         // 3-2. copy Stubs/resources/lang/ja/excrud.php
         $sourceFile      = __DIR__ . '/../Stubs/resources/lang/ja/excrud.php';
-
-        $destinationFile = '';
-        // for Laravel 9
-        if (is_dir(base_path('/lang'))) {
-            $destinationFile = base_path('lang/ja/excrud.php');
-            if (!is_dir(base_path('lang/ja/'))) {
-                File::makeDirectory(base_path('lang/ja/'));
-            }
-        } else {
-            $destinationFile = resource_path('lang/ja/excrud.php');
-            if (!is_dir(resource_path('lang/ja/'))) {
-                File::makeDirectory(resource_path('lang/ja/'));
-            }
+        $destinationFile = resource_path('lang/ja/excrud.php');
+        if (!is_dir(resource_path('lang/ja/'))) {
+            File::makeDirectory(resource_path('lang/ja/'));
         }
-
         if (File::copy($sourceFile, $destinationFile)) {
             $this->info("Success: resources/{$destinationFile} copied.");
         }

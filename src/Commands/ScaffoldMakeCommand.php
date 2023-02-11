@@ -191,31 +191,29 @@ class ScaffoldMakeCommand extends Command
         $this->info('Dump-autoload...');
         $this->composer->dumpAutoloads();
 
-        $this->info("\n==================== Add this to ./routes/web.php");
-        $this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'Controller;' . "\n");
-
-
         $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
-        if ($laravel_major_version >= 8) {
-            $objName = $this->getObjName("names");
-            $className  = 'App\\Http\\Controllers\\' . $this->getObjName("Name") . 'Controller::class';
+        $this->info("\n==================== Add this to ./routes/web.php");
 
-            $this->info("Route::get('{$objName}/dl_delete_submit', [{$className}, 'dl_delete_submit']);  // multiple delete");
-            $this->info("Route::get('{$objName}/sort', [{$className}, 'sort']);  // sort");
-            $this->info("Route::post('{$objName}/sort_exec_ajax', [{$className}, 'sort_exec_ajax']);  // sort_exec_ajax");
-            $this->info("Route::delete('{$objName}/destroy_ajax', [{$className}, 'destroy_ajax']);  // destroy_ajax");
-            $this->info("Route::get('{$objName}/index_ajax', [{$className}, 'index_ajax']);  // index_ajax");
-            $this->info('Route::resource("' . $this->getObjName("names") . '", ' . $className . ');');
+        if ($laravel_major_version >= 8) {
+            $this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'Controller;' . "\n");
+            $this->info('Route::get("' . $this->getObjName("names") . '/dl_delete_submit", [' . $this->getObjName("Name") . 'Controller::class,' . '\'dl_delete_submit\'])->name("' . $this->getObjName("names") . '.dl_delete_submit"); // multiple delete');
+            $this->info('Route::post("' . $this->getObjName("names") . '/sort_exec_ajax", [' . $this->getObjName("Name") . 'Controller::class,' . '\'sort_exec_ajax\'])->name("' . $this->getObjName("names") . '.sort_exec_ajax"); // sort exec');
+            $this->info('Route::get("' . $this->getObjName("names") . '/sort", [' . $this->getObjName("Name") . 'Controller::class,' . '\'sort\'])->name("' . $this->getObjName("names") . '.sort"); // sort view');
+            $this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", [' . $this->getObjName("Name") . 'Controller::class,' . '\'destroy_ajax\'])->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
+            $this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", [' . $this->getObjName("Name") . 'Controller::class,' . '\'index_ajax\'])->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
+            $this->info('Route::get("' . $this->getObjName("names") . '/search", [' . $this->getObjName("Name") . 'Controller::class,' . '\'search\'])->name("' . $this->getObjName("names") . '.search");');
+            $this->info('Route::resource("' . $this->getObjName("names") . '", ' .  '\App\Http\Controllers\\' . $this->getObjName("Name") . 'Controller::class);');
         } else {
+            $this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'Controller;' . "\n");
             $this->info('Route::get("' . $this->getObjName("names") . '/dl_delete_submit", "' . $this->getObjName("Name") . 'Controller@dl_delete_submit")->name("' . $this->getObjName("names") . '.dl_delete_submit"); // multiple delete');
             $this->info('Route::post("' . $this->getObjName("names") . '/sort_exec_ajax", "' . $this->getObjName("Name") . 'Controller@sort_exec_ajax")->name("' . $this->getObjName("names") . '.sort_exec_ajax"); // sort exec');
             $this->info('Route::get("' . $this->getObjName("names") . '/sort", "' . $this->getObjName("Name") . 'Controller@sort")->name("' . $this->getObjName("names") . '.sort"); // sort view');
             $this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", "' . $this->getObjName("Name") . 'Controller@destroy_ajax")->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
             $this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", "' . $this->getObjName("Name") . 'Controller@index_ajax")->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
             $this->info('Route::get("' . $this->getObjName("names") . '/search", "' . $this->getObjName("Name") . 'Controller@search")->name("' . $this->getObjName("names") . '.search");');
-            $this->info("\n");
             $this->info('Route::resource("' . $this->getObjName("names") . '","' . $this->getObjName("Name") . 'Controller");');
         }
+
         $this->info("==================== Add this\n");
 
         $addapi = $this->option('addapi');
@@ -223,7 +221,7 @@ class ScaffoldMakeCommand extends Command
             $this->info("\n==================== Add this to ./routes/api.php");
             $this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'ApiController;' . "\n");
             if ($laravel_major_version >= 8) {
-                $this->info('Route::apiResource("' . $this->getObjName("names") . '", ' .  'App\\Http\\Controllers\\' . $this->getObjName("Name")  . 'ApiController::class);');
+                $this->info('Route::apiResource("' . $this->getObjName("names") . '", '  . 'App\\Http\\Controllers\\'  . $this->getObjName("Name")  . 'ApiController::class);');
             } else {
                 $this->info('Route::apiResource("' . '","' . $this->getObjName("Name") . $this->getObjName("names")  .  'ApiController");');
             }

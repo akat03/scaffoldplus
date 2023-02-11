@@ -52,15 +52,25 @@ class MakeController
         }
 
         // save language files
-        $lang_path_ja = ScaffoldplusLib::getLangDir() . '/ja/excrud.php';
+        // $lang_base_path = './resources/lang';
+        // $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+        // if ($laravel_major_version >= 9) {
+        //     $lang_base_path = './lang';
+        // }
+
+        $lang_base_path = \Akat03\Scaffoldplus\libs\ScaffoldplusLib::getLangDir();
+        $lang_path_ja = $lang_base_path . 'ja/excrud.php';
         if (!is_file($lang_path_ja)) {
             if (!is_dir(dirname($lang_path_ja))) {
+                $this->scaffoldCommandObj->info('Create Directory ' . dirname($lang_path_ja));
                 mkdir(dirname($lang_path_ja));
             }
             $this->files->put($lang_path_ja,  $this->files->get(__DIR__ . '/../Stubs/resources/lang/ja/excrud.php'));
         }
 
         $this->scaffoldCommandObj->info('Controller created successfully.');
+
+        //$this->composer->dumpAutoloads();
     }
 
 

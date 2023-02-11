@@ -7,10 +7,10 @@ class ScaffoldplusLib
 {
     static function getLangDir()
     {
-        if (is_dir(base_path('/lang'))) {
-            return base_path('/lang');
+        if (is_dir(base_path('lang'))) {
+            return base_path('lang');
         } else {
-            return resource_path('/lang');
+            return resource_path('lang');
         }
     }
 }
