@@ -7,8 +7,7 @@
 	"require": {
 		"laravel/framework": "*" ,
 		"laravel/helpers": "*" ,
-		"symfony/yaml": "*" ,
-		"laravelcollective/html": "*"
+		"symfony/yaml": "*"
 	},
 	"autoload": {
 		"psr-4": {
