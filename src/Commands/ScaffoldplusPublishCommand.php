@@ -111,7 +111,6 @@ class ScaffoldplusPublishCommand extends Command
         } else {
             $destinationFile = resource_path('lang/ja/excrud.php');
         }
-        dd($destinationFile);
         if (File::copy($sourceFile, $destinationFile)) {
             $this->info("Success: resources/{$destinationFile} copied.");
         }

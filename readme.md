@@ -52,7 +52,7 @@ show some commands like below
 ```
  scaffoldplus
   scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
-  scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
+  scaffoldplus:publish  Publish  /lang/en/excrud.php , /assets/js/ , /assets/css/ files
 ```
 
 
