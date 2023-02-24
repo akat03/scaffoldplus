@@ -85,28 +85,33 @@ class ScaffoldplusPublishCommand extends Command
         }
 
         // 3-1. copy Stubs/resources/lang/en/excrud.php
-        $sourceFile      = __DIR__ . '/../Stubs/resources/lang/en/excrud.php';
-        $destinationFile = '';
-
         $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
 
-        if ($laravel_major_version > 10) {
+        $sourceFile      = __DIR__ . '/../Stubs/resources/lang/en/excrud.php';
+        $destinationFile = '';
+        if (intval($laravel_major_version) >= 9) {
             // for Laravel 9 or later
-            $destinationFile = base_path('lang/en/excrud.php');
+            $destinationFile = app()->langPath('en/excrud.php');
         } else {
             $destinationFile = resource_path('lang/en/excrud.php');
         }
-
         if (File::copy($sourceFile, $destinationFile)) {
             $this->info("Success: resources/{$destinationFile} copied.");
         }
 
         // 3-2. copy Stubs/resources/lang/ja/excrud.php
         $sourceFile      = __DIR__ . '/../Stubs/resources/lang/ja/excrud.php';
-        $destinationFile = resource_path('lang/ja/excrud.php');
-        if (!is_dir(resource_path('lang/ja/'))) {
-            File::makeDirectory(resource_path('lang/ja/'));
+        $destinationFile = '';
+        if (intval($laravel_major_version) >= 9) {
+            // for Laravel 9 or later
+            if (!is_dir(app()->langPath('ja/'))) {
+                mkdir(app()->langPath('ja/'));
+            }
+            $destinationFile = app()->langPath('ja/excrud.php');
+        } else {
+            $destinationFile = resource_path('lang/ja/excrud.php');
         }
+        dd($destinationFile);
         if (File::copy($sourceFile, $destinationFile)) {
             $this->info("Success: resources/{$destinationFile} copied.");
         }

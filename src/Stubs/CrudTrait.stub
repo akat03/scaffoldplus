@@ -10,7 +10,7 @@
  */
 
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +25,6 @@ trait CrudTrait
     public function crud_set_json( $format='json', $class_name = '' )
     {
         if (! $class_name ){
-            // $ar = explode('\\', __CLASS__);          // ng
             $ar = explode('\\', get_called_class());    // ok
             $class_name = end($ar);
         }
@@ -39,7 +38,7 @@ trait CrudTrait
             $url = __DIR__ . '/' . $class_name . '.yml';
             $input_src = file_get_contents($url);
             $this->crud_config = \Symfony\Component\Yaml\Yaml::parse($input_src);
-            // 配列をObjectに変換
+            // array to Object
             $this->crud_config = json_decode(json_encode($this->crud_config));
         }
     }
@@ -82,7 +81,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
+     * method : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -109,7 +108,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
+     * method : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -135,7 +134,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     * method : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -163,7 +162,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     * method : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -188,7 +187,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
+     * method : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
      *
      *
      */
@@ -205,7 +204,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
+     * method : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -222,7 +221,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_onefile_url('item_files_name'); で　DBカラム「item_files_name」の 画像のurlを返す（ public ディスク ）
+     * method : ->_onefile_url('item_files_name'); で　DBカラム「item_files_name」の 画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      *
@@ -245,7 +244,7 @@ trait CrudTrait
 
 
     /**
-     * 独自メソッド : ->_onefile_s3_signed_url('item_files_name'); で　DBカラム「item_files_name」の 画像のS3 pre signed urlを返す（ s3 ディスクのみ ）
+     * method : ->_onefile_s3_signed_url('item_files_name'); で　DBカラム「item_files_name」の 画像のS3 pre signed urlを返す（ s3 ディスクのみ ）
      *
      * @param   string      $column_name
      *
@@ -283,7 +282,7 @@ trait CrudTrait
 
     public static function get_model_classname()
     {
-        static::who(); // これで、遅延静的束縛が行われます
+        static::who(); // 遅延静的束縛
     }
 
 

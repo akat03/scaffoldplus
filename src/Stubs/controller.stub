@@ -4,15 +4,13 @@ namespace App\Http\Controllers{{prefix_namespace}};
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-
-use {{model_path}};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use DB;
+use {{model_path}};
 
-class {{class}} extends Controller {
-
-
+class {{class}} extends Controller
+{
 	// File Upload Trait
 	use \App\Http\Controllers\CrudControllerTrait;
 

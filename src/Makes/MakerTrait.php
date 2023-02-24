@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: fernandobritofl
@@ -14,7 +15,8 @@ namespace Akat03\Scaffoldplus\Makes;
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 
-trait MakerTrait {
+trait MakerTrait
+{
 
     /**
      * The filesystem instance.
@@ -28,7 +30,8 @@ trait MakerTrait {
      * @param ScaffoldMakeCommand $scaffoldCommand
      * @param Filesystem $files
      */
-    public function __construct(ScaffoldMakeCommand $scaffoldCommand, Filesystem $files){
+    public function __construct(ScaffoldMakeCommand $scaffoldCommand, Filesystem $files)
+    {
         $this->files = $files;
         $this->scaffoldCommandM = $scaffoldCommand;
 
@@ -43,28 +46,22 @@ trait MakerTrait {
      * @param string $path
      * @return string
      */
-    protected function getPath($file_name, $path='controller'){
-        if($path == "controller"){
+    protected function getPath($file_name, $path = 'controller')
+    {
+        if ($path == "controller") {
             return './app/Http/Controllers/' . $file_name . '.php';
-
-        } elseif($path == "model"){
-            return './app/'.$file_name.'.php';
-
-        } elseif($path == "seed"){
-            return './database/seeds/'.$file_name.'.php';
-
-        } elseif($path == "view-index"){
-            return './resources/views/'.$file_name.'/index.blade.php';
-
-        } elseif($path == "view-edit"){
-            return './resources/views/'.$file_name.'/edit.blade.php';
-
-        } elseif($path == "view-show"){
-            return './resources/views/'.$file_name.'/show.blade.php';
-
-        } elseif($path == "view-create"){
-            return './resources/views/'.$file_name.'/create.blade.php';
-
+        } elseif ($path == "model") {
+            return './app/Models/' . $file_name . '.php';
+        } elseif ($path == "seed") {
+            return './database/seeds/' . $file_name . '.php';
+        } elseif ($path == "view-index") {
+            return './resources/views/' . $file_name . '/index.blade.php';
+        } elseif ($path == "view-edit") {
+            return './resources/views/' . $file_name . '/edit.blade.php';
+        } elseif ($path == "view-show") {
+            return './resources/views/' . $file_name . '/show.blade.php';
+        } elseif ($path == "view-create") {
+            return './resources/views/' . $file_name . '/create.blade.php';
         }
     }
 
@@ -82,16 +79,8 @@ trait MakerTrait {
     protected function makeDirectory($path)
     {
 
-        if ( ! $this->files->isDirectory(dirname($path)))
-        {
+        if (!$this->files->isDirectory(dirname($path))) {
             $this->files->makeDirectory(dirname($path), 0777, true, true);
         }
     }
-
-
-
-
-
-
-
 }

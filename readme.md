@@ -1,4 +1,4 @@
-# Scaffold , CRUD Package for Laravel 5 / 6 / 7 / 8 / 9
+# Scaffold , CRUD Package for Laravel 6 / 7 / 8 / 9 / 10
 
 <img src="https://raw.githubusercontent.com/akat03/scaffoldplus/master/readme-posts-list.png" title="Scaffold , CRUD Package for Laravel">
 

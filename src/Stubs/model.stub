@@ -1,13 +1,13 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class {{model_name_class}} extends Model
 {
 
-    use \App\CrudTrait;
+    use \App\Models\CrudTrait;
 
 
     // Table Name
@@ -22,10 +22,10 @@ class {{model_name_class}} extends Model
     protected $dates = [''];
 
 
-    // /**
-    //  * boot method
-    //  * @return void
-    //  */
+    /**
+     * boot method
+     * @return void
+     */
     protected static function boot()
     {
         parent::boot();
