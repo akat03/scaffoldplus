@@ -88,8 +88,10 @@ class ScaffoldplusPublishCommand extends Command
         $sourceFile      = __DIR__ . '/../Stubs/resources/lang/en/excrud.php';
         $destinationFile = '';
 
-        if (is_dir(base_path('/lang'))) {
-            // for Laravel 9
+        $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+
+        if ($laravel_major_version > 10) {
+            // for Laravel 9 or later
             $destinationFile = base_path('lang/en/excrud.php');
         } else {
             $destinationFile = resource_path('lang/en/excrud.php');

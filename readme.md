@@ -61,6 +61,11 @@ show some commands like below
 
 
 ## ＊1. Copy /assets/ files to your public directory
+
+```
+php artisan lang:publish
+```
+
 ```
 php artisan scaffoldplus:publish
 ```
