@@ -1,4 +1,4 @@
-# Scaffold , CRUD Package for Laravel 6 / 7 / 8 / 9 / 10
+# Scaffold CRUD Package for Laravel
 
 <img src="https://raw.githubusercontent.com/akat03/scaffoldplus/master/readme-posts-list.png" title="Scaffold , CRUD Package for Laravel">
 
@@ -52,20 +52,48 @@ show some commands like below
 ```
  scaffoldplus
   scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
-  scaffoldplus:publish  Publish  /lang/en/excrud.php , /assets/js/ , /assets/css/ files
+  scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
 ```
 
 
+
+## If you are using Laravel 5.4 
+
+
+### edit config/app.php and add 'providers'
+
+add **‘laravelcollective’**
+
+```
+composer require "laravelcollective/html":"^5.4.0"
+```
+
+add **config/app.php**
+
+```
+    'providers' => [
+        ........
+        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
+        Collective\Html\HtmlServiceProvider::class,     // add this
+    ],
+
+
+   'aliases' => [
+        ........
+        'Form' => Collective\Html\FormFacade::class,     // add this
+        'Html' => Collective\Html\HtmlFacade::class,     // add this
+  ],
+```
+
+
+
+
+<br>
 
 # ● Execute scaffold command
 
 
-## ＊1. Copy /assets/ files to your public directory
-
-```
-php artisan lang:publish
-```
-
+## ＊1. Copy /assets/ directory to your public directory
 ```
 php artisan scaffoldplus:publish
 ```
@@ -213,5 +241,5 @@ access
 
 <br>
 
-# ● This package is forked from
+# ● Thanks to
 [laralib/l5scaffold: Scaffold generator for Laravel 5.x](https://github.com/laralib/l5scaffold)

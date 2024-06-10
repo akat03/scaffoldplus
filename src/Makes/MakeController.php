@@ -2,8 +2,6 @@
 
 namespace Akat03\Scaffoldplus\Makes;
 
-// use Illuminate\Console\AppNamespaceDetectorTrait;
-
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 use Akat03\Scaffoldplus\Migrations\SchemaParser;
@@ -12,7 +10,6 @@ use Akat03\Scaffoldplus\libs\ScaffoldplusLib;
 
 class MakeController
 {
-    // use AppNamespaceDetectorTrait, MakerTrait;
     use MakerTrait;
 
     protected $scaffoldCommandObj;
@@ -116,8 +113,10 @@ class MakeController
      */
     private function replaceModelPath(&$stub)
     {
+        $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+        $models_dir = ($laravel_major_version >= 8) ? "Models\\" : '';
 
-        $model_name = '\\App\\Models\\' . $this->scaffoldCommandObj->getObjName('Name');
+        $model_name = \App::getNamespace() . $models_dir . $this->scaffoldCommandObj->getObjName('Name');
         $stub = str_replace('{{model_path}}', $model_name, $stub);
 
         return $this;

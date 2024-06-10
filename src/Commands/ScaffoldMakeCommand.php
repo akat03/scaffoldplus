@@ -202,7 +202,7 @@ class ScaffoldMakeCommand extends Command
             $this->info('Route::delete("' . $this->getObjName("names") . '/destroy_ajax", [' . $this->getObjName("Name") . 'Controller::class,' . '\'destroy_ajax\'])->name("' . $this->getObjName("names") . '.destroy_ajax"); // ajax delete');
             $this->info('Route::get("' . $this->getObjName("names") . '/index_ajax", [' . $this->getObjName("Name") . 'Controller::class,' . '\'index_ajax\'])->name("' . $this->getObjName("names") . '.index_ajax"); // ajax index');
             $this->info('Route::get("' . $this->getObjName("names") . '/search", [' . $this->getObjName("Name") . 'Controller::class,' . '\'search\'])->name("' . $this->getObjName("names") . '.search");');
-            $this->info('Route::resource("' . $this->getObjName("names") . '", ' .  '\App\Http\Controllers\\' . $this->getObjName("Name") . 'Controller::class);');
+            $this->info('Route::resource("' . $this->getObjName("names") . '", ' . $this->getObjName("Name") . 'Controller::class);');
         } else {
             $this->info('use App\\Http\\Controllers\\' . $this->getObjName("Name") .  'Controller;' . "\n");
             $this->info('Route::get("' . $this->getObjName("names") . '/dl_delete_submit", "' . $this->getObjName("Name") . 'Controller@dl_delete_submit")->name("' . $this->getObjName("names") . '.dl_delete_submit"); // multiple delete');

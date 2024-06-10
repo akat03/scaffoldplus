@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: fernandobritofl
- * Date: 4/22/15
- * Time: 10:34 PM
- */
 
 namespace Akat03\Scaffoldplus\Makes;
-
 
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 use Akat03\Scaffoldplus\Migrations\SchemaParser;
 use Akat03\Scaffoldplus\Migrations\SyntaxBuilder;
 
-class MakeMigration {
+class MakeMigration
+{
     use MakerTrait;
 
     protected $scaffoldCommandObj;
@@ -28,17 +22,14 @@ class MakeMigration {
     }
 
 
-    protected function start(){
-        // Cria o nome do arquivo do migration // create_tweets_table
-        $name = 'create_'.str_plural(strtolower( $this->scaffoldCommandObj->argument('name') )).'_table';
+    protected function start()
+    {
+        $name = 'create_' . str_plural(strtolower($this->scaffoldCommandObj->argument('name'))) . '_table';
 
-        // Verifica se o arquivo existe com o mesmo o nome
-        if ($this->files->exists($path = $this->getPath($name)))
-        {
-            return $this->scaffoldCommandObj->error($this->type.' already exists!');
+        if ($this->files->exists($path = $this->getPath($name))) {
+            return $this->scaffoldCommandObj->error($this->type . ' already exists!');
         }
 
-        // Cria a pasta caso nao exista
         $this->makeDirectory($path);
 
         // Grava o arquivo
@@ -56,9 +47,8 @@ class MakeMigration {
      */
     protected function getPath($name)
     {
-        return './database/migrations/'.date('Y_m_d_His').'_'.$name.'.php';
+        return './database/migrations/' . date('Y_m_d_His') . '_' . $name . '.php';
     }
-
 
 
     /**
@@ -68,18 +58,14 @@ class MakeMigration {
      */
     protected function compileMigrationStub()
     {
-        $stub = $this->files->get(__DIR__.'/../Stubs/migration.stub');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/migration.stub');
 
         $this->replaceClassName($stub)
             ->replaceSchema($stub)
             ->replaceTableName($stub);
 
-
         return $stub;
     }
-
-
-
 
 
     /**
@@ -90,7 +76,7 @@ class MakeMigration {
      */
     protected function replaceClassName(&$stub)
     {
-        $className = ucwords(camel_case('Create'.str_plural($this->scaffoldCommandObj->argument('name')).'Table'));
+        $className = ucwords(camel_case('Create' . str_plural($this->scaffoldCommandObj->argument('name')) . 'Table'));
         $stub = str_replace('{{class}}', $className, $stub);
 
         return $this;
@@ -117,29 +103,25 @@ class MakeMigration {
      * @param string $type
      * @return $this
      */
-    protected function replaceSchema(&$stub, $type='migration')
+    protected function replaceSchema(&$stub, $type = 'migration')
     {
         if ($schema = $this->scaffoldCommandObj->option('schema')) {
-// dd($schema);
+            // dd($schema);
             $schema = (new SchemaParser)->parse($schema);
         }
 
 
-        if($type == 'migration'){
+        if ($type == 'migration') {
             // Create migration fields
             $schema = (new SyntaxBuilder)->create($schema, $this->scaffoldCommandObj->getMeta());
             $stub = str_replace(['{{schema_up}}', '{{schema_down}}'], $schema, $stub);
-
-
-        } else if($type='controller'){
+        } else if ($type = 'controller') {
             // Create controllers fields
             $schema = (new SyntaxBuilder)->create($schema, $this->scaffoldCommandObj->getMeta(), 'controller');
             $stub = str_replace('{{model_fields}}', $schema, $stub);
-
-
-        } else {}
+        } else {
+        }
 
         return $this;
     }
-
 }

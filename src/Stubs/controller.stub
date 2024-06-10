@@ -3,12 +3,13 @@
 namespace App\Http\Controllers{{prefix_namespace}};
 
 use App\Http\Controllers\Controller;
+use {{model_path}};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-use {{model_path}};
+use DB;
+use App\Http\Controllers\CrudControllerTrait;
 
-class {{class}} extends Controller
+class {{class}} extends Controller 
 {
 	// File Upload Trait
 	use \App\Http\Controllers\CrudControllerTrait;
@@ -39,7 +40,6 @@ class {{class}} extends Controller
 	}
 
 
-
 	/**
 	 * set Search Columns from CRUD YAML
 	 * @return void
@@ -52,7 +52,6 @@ class {{class}} extends Controller
 		$crud_config = $doctor->get_crud_config();
 		$this->search_columns = (array)$crud_config->view_list_search_columns;
 	}
-
 
 
 	/**
@@ -81,9 +80,8 @@ class {{class}} extends Controller
 	 */
 	public function sort_exec_ajax(Request $request)
 	{
-		$this->validate($request, [
-            'id_loop'      => 'required',
-            // 'client_id' => 'required',
+		$request->validate([
+			'id_loop'      => 'required',
 		]);
 
 		$loop = $request->id_loop;
@@ -132,6 +130,62 @@ class {{class}} extends Controller
 		// view
 		return view('{{prefix}}{{model_name_var}}.sort', compact('{{model_name_var}}','q', 'crud_config'));
 	}
+
+
+
+
+	/**
+	 * for Vue.js
+	 * @return array
+	 */
+	public function index_ajax( Request $request )
+	{
+		// CRUD
+	 	$client = new {{model_name_class}}();
+		$client->crud_set_json('yaml');
+		$crud_config = $client->get_crud_config();
+
+		$column    = @$crud_config->view_list_order_column ?: 'id';
+		$direction = @$crud_config->view_list_order_direction ?: 'DESC';
+
+		${{model_name_var}} = {{model_name_class}}::orderBy($column, $direction)->get();
+		return ${{model_name_var}}->toArray();
+	}
+
+
+
+	/**
+	 * for Vue.js
+	 * @return Response
+	 */
+	public function index_vue( Request $request )
+	{
+		// limit
+		$limit = 10;
+		if ( @$crud_config->view_list_limit_default ){ $limit = $crud_config->view_list_limit_default; }	// limit default from YAML
+
+		if ( @$q['limit'] ){
+			$limit = $q['limit'];
+		}
+		if ( $limit > 100 ){
+			$limit = 100;
+		}
+		$q['limit'] = $limit;
+
+		$search_columns_loop = $this->search_columns;
+
+		$q = null;
+		$pagination_params = null;
+
+		// CRUD
+	 	${{model_name_var_sgl}} = new {{model_name_class}}();
+		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
+		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
+
+		// Vue.js Datatable view
+		return view('{{prefix}}{{model_name_var}}.index_ajax', compact('search_columns_loop','q','pagination_params', 'crud_config'));
+	}
+
 
 
 	/**
@@ -258,7 +312,7 @@ class {{class}} extends Controller
 	 */
 	public function store(Request $request)
 	{
-		$this->validate($request, $this->validation_column);
+		$request->validate($this->validation_column);
 
 		$model = new {{model_name_class}}();
 
@@ -396,7 +450,8 @@ class {{class}} extends Controller
 	 */
 	public function update(Request $request, $id)
 	{
-		$this->validate($request, $this->validation_column);
+		$request->validate($this->validation_column);
+
 		$model = {{model_name_class}}::findOrFail($id);
 
 		// file upload (戻り値の $q は $request->all() から添付ファイル関連を除いたもの)
@@ -555,56 +610,8 @@ class {{class}} extends Controller
 	}
 
 
-	/**
-	 * for Vue.js
-	 * @return array
-	 */
-	public function index_ajax( Request $request )
-	{
-		// CRUD
-	 	$client = new {{model_name_class}}();
-		$client->crud_set_json('yaml');
-		$crud_config = $client->get_crud_config();
-
-		$column    = @$crud_config->view_list_order_column ?: 'id';
-		$direction = @$crud_config->view_list_order_direction ?: 'DESC';
-
-		${{model_name_var}} = {{model_name_class}}::orderBy($column, $direction)->get();
-		return ${{model_name_var}}->toArray();
-	}
 
 
-	/**
-	 * for Vue.js
-	 * @return Response
-	 */
-	public function index_vue( Request $request )
-	{
-		// limit
-		$limit = 10;
-		if ( @$crud_config->view_list_limit_default ){ $limit = $crud_config->view_list_limit_default; }	// limit default from YAML
-
-		if ( @$q['limit'] ){
-			$limit = $q['limit'];
-		}
-		if ( $limit > 100 ){
-			$limit = 100;
-		}
-		$q['limit'] = $limit;
-
-		$search_columns_loop = $this->search_columns;
-
-		$q = null;
-		$pagination_params = null;
-
-		// CRUD
-	 	${{model_name_var_sgl}} = new {{model_name_class}}();
-		${{model_name_var_sgl}}->crud_set_json('{{crud_format}}');
-		$crud_config = ${{model_name_var_sgl}}->get_crud_config();
-
-		// Vue.js Datatable view
-		return view('{{prefix}}{{model_name_var}}.index_ajax', compact('search_columns_loop','q','pagination_params', 'crud_config'));
-	}
 
 
 }

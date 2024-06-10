@@ -6,13 +6,12 @@
  * @version 0.3 [add] crud_has_input_type() method
  * @version 0.4 [add] crud_has_input_type() method
  * @version 0.5 [add] _onefile_s3_signed_url() method
+ * @version 0.6 [fix] moved to Models
  *
  */
 
 
 namespace App\Models;
-
-use Illuminate\Support\Facades\DB;
 
 trait CrudTrait
 {
@@ -25,7 +24,7 @@ trait CrudTrait
     public function crud_set_json( $format='json', $class_name = '' )
     {
         if (! $class_name ){
-            $ar = explode('\\', get_called_class());    // ok
+            $ar = explode('\\', get_called_class());
             $class_name = end($ar);
         }
 
@@ -38,18 +37,14 @@ trait CrudTrait
             $url = __DIR__ . '/' . $class_name . '.yml';
             $input_src = file_get_contents($url);
             $this->crud_config = \Symfony\Component\Yaml\Yaml::parse($input_src);
-            // array to Object
+            // 配列をObjectに変換
             $this->crud_config = json_decode(json_encode($this->crud_config));
         }
     }
 
 
-
     /**
-     * CRUD情報の中に
-     *              input_type          : component_summernote
-     *              のような component を含むかどうかを判別して返す。
-     *
+     * CRUD情報の中に component を含むかどうかを判別して返す。
      * @param   string      input type name (e.g. component_summernote )
      * @return  boolean     true: 指定したコンポーネントが存在する  false:指定したコンポーネントが存在しない
      *
@@ -66,7 +61,6 @@ trait CrudTrait
     }
 
 
-
     /**
      * CRUD情報のgetter
      *
@@ -79,9 +73,8 @@ trait CrudTrait
     }
 
 
-
     /**
-     * method : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
+     * 独自メソッド : ->_file_download('item_files_name',0); で　DBカラム「item_files_name」の 0 番目のファイルをダウンロードさせる
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -108,7 +101,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
+     * 独自メソッド : ->_file_dir_and_filename('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のディレクトリとファイル名を返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -134,7 +127,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     * 独自メソッド : ->_file_path('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -162,7 +155,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
+     * 独自メソッド : ->_file_url('item_files_name',0); で　DBカラム「item_files_name」の 0 番目の画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -187,7 +180,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
+     * 独自メソッド : ->_file_count('item_files_name'); で　DBカラム「item_files_name」の画像数を返す
      *
      *
      */
@@ -204,7 +197,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
+     * 独自メソッド : ->_file_width_height('item_files_name',0); で　DBカラム「item_files_name」の 0番目の画像のwidth,heightを返す
      *
      * @param   string      $column_name
      * @param   int         $no
@@ -221,7 +214,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_onefile_url('item_files_name'); で　DBカラム「item_files_name」の 画像のurlを返す（ public ディスク ）
+     * 独自メソッド : ->_onefile_url('item_files_name'); で　DBカラム「item_files_name」の 画像のurlを返す（ public ディスク ）
      *
      * @param   string      $column_name
      *
@@ -244,7 +237,7 @@ trait CrudTrait
 
 
     /**
-     * method : ->_onefile_s3_signed_url('item_files_name'); で　DBカラム「item_files_name」の 画像のS3 pre signed urlを返す（ s3 ディスクのみ ）
+     * 独自メソッド : ->_onefile_s3_signed_url('item_files_name'); で　DBカラム「item_files_name」の 画像のS3 pre signed urlを返す（ s3 ディスクのみ ）
      *
      * @param   string      $column_name
      *
@@ -282,7 +275,7 @@ trait CrudTrait
 
     public static function get_model_classname()
     {
-        static::who(); // 遅延静的束縛
+        static::who(); // これで、遅延静的束縛が行われます
     }
 
 

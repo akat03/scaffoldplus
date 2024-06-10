@@ -1,14 +1,14 @@
 {
 	"name": "akat03/scaffoldplus",
-	"description": "Scaffold , CRUD Package for Laravel 5/6/7/8",
+	"description": "Scaffold , CRUD Package for Laravel",
 	"keywords": ["laravel", "generators", "scaffold" , "crud"],
 	"license": "MIT",
 	"minimum-stability": "dev",
 	"require": {
-		"laravel/framework": "^6.0|^7.0|^8.0|^9.0|^10.0" ,
+		"laravel/framework": "*" ,
 		"laravel/helpers": "*" ,
-		"symfony/yaml": "*" ,
-		"laravelcollective/html": "*"
+		"symfony/yaml": "*",
+		"spatie/laravel-html": "*"
 	},
 	"autoload": {
 		"psr-4": {

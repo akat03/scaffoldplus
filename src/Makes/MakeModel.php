@@ -20,7 +20,6 @@ class MakeModel
         $this->files = $files;
         $this->scaffoldCommandObj = $scaffoldCommand;
         $this->getSchemaArray();
-
         $this->start();
     }
 
@@ -28,6 +27,7 @@ class MakeModel
     protected function start()
     {
         $name = $this->scaffoldCommandObj->getObjName('Name');
+        // $modelPath = $this->getPath($name, 'model');
 
         // Make: ./app/[MODEL].php
         $path = $this->getPath($name, 'model');
@@ -36,18 +36,7 @@ class MakeModel
             ->replaceModelPath($stub)
             ->replaceModelName($stub)
             ->replaceSchemaShow($stub);
-        // put if file is not exists.
-        if (!$this->files->exists($path)) {
-            $this->files->put($path, $stub);
-            $this->getSuccessMsg();
-        }
 
-
-        // Make: ./app/CrudTrait.php
-        $path = $this->getPath('CrudTrait', 'model');
-        $stub = $this->files->get(__DIR__ . '/../Stubs/CrudTrait.stub');
-        $this->replaceName($stub)
-            ->replaceSchemaShow($stub);
         // put if file is not exists.
         if ($this->files->exists($path)) {
         } else {
@@ -55,19 +44,26 @@ class MakeModel
             $this->getSuccessMsg();
         }
 
+        // Make: ./app/CrudTrait.php
+        $path = $this->getPath('CrudTrait', 'model');
+        $stub = $this->files->get(__DIR__ . '/../Stubs/CrudTrait.stub');
+        $this->replaceName($stub)
+            ->replaceSchemaShow($stub);
+
+        // put if file is not exists.
+        if ($this->files->exists($path)) {
+        } else {
+            $this->files->put($path, $stub);
+            $this->getSuccessMsg();
+        }
 
         // ========== Make: ./app/[MODEL].json
         $crud_format = $this->scaffoldCommandObj->option('crud_format');
         $crud_format = str_replace('"', '', $crud_format);
-        $crud_ext = '';
+        $crud_ext = ($crud_format == 'yaml') ? 'yml' : 'json';
 
-        if ($crud_format == 'yaml') {
-            $crud_ext = 'yml';
-        } else {
-            $crud_ext = 'json';
-        }
-
-        $path = './app/Models/' . $this->scaffoldCommandObj->getObjName('Name') . ".{$crud_ext}";
+        // $path = './app/' . $this->scaffoldCommandObj->getObjName('Name') . ".{$crud_ext}";
+        $path = $this->getPath($name, $crud_ext);
         $stub = '';
         $json = [];
 
@@ -98,7 +94,6 @@ class MakeModel
             } else {
                 $json['view_list_search_columns'][$v['name']] = ucfirst($v['name']);
             }
-            // array_push( $json['view_list_search_columns'], $tmp_hash);
         }
         $json['view_list_search_all_flag'] = 1;
 
@@ -132,16 +127,14 @@ class MakeModel
         $json['table_desc']['id'] = $h;
 
 
-        // $stub_parts = $this->files->get(__DIR__ . '/../Stubs/ModelJson.stub');
         foreach ($this->schemaArray as $v) {
+            // dd($v);
             $view_list_title = ucfirst($v['name']);
             if (@$v['options']['comment']) {
                 $view_list_title = $v['options']['comment'];
-                // 先頭と最後の ''  ""  を削除
                 $view_list_title = preg_replace("{^['\"]}", "", $view_list_title);
                 $view_list_title = preg_replace("{['\"]$}", "", $view_list_title);
             }
-            // dump($view_list_title);
             $h = [
                 "name"            => $v['name'],
                 "view_list_title" => $view_list_title,
@@ -240,7 +233,7 @@ class MakeModel
 # ===== ＜SELECT＞ を 直接生成（PHPによる値設定）
 # input_type        : select
 # input_values_php  : |
-#     $values = [
+#     $values = [ 
 #         '' => '選択してください' ,
 #     ];
 #     $dt_start = new \Carbon\Carbon('2009-01-01');
@@ -320,7 +313,7 @@ view_list_tab_group:
 view_column_name_in_show_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_SHOW");
 view_column_name_in_edit_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_EDIT");
 
-
+        
 
 # ==================== component ====================
 
@@ -412,7 +405,9 @@ DOC_END;
     {
         if ($this->scaffoldCommandObj->option('schema') != null) {
             if ($schema = $this->scaffoldCommandObj->option('schema')) {
+                // dd($schema);
                 $this->schemaArray = (new SchemaParser)->parse($schema);
+                // dd($this->schemaArray);
             }
         }
     }
@@ -466,10 +461,8 @@ DOC_END;
      */
     private function replaceModelPath(&$stub)
     {
-
-        $model_name = '\\App\\Models\\' . $this->scaffoldCommandObj->getObjName('Name');
+        $model_name = \App::getNamespace() . $this->scaffoldCommandObj->getObjName('Name');
         $stub = str_replace('{{model_path}}', $model_name, $stub);
-
         return $this;
     }
 

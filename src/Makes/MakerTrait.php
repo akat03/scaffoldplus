@@ -1,16 +1,6 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: fernandobritofl
- * Date: 4/21/15
- * Time: 5:00 PM
- */
-
 namespace Akat03\Scaffoldplus\Makes;
-
-
-
 
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
@@ -48,10 +38,23 @@ trait MakerTrait
      */
     protected function getPath($file_name, $path = 'controller')
     {
+        $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+
         if ($path == "controller") {
             return './app/Http/Controllers/' . $file_name . '.php';
         } elseif ($path == "model") {
-            return './app/Models/' . $file_name . '.php';
+            if ($laravel_major_version >= 8) {
+                return './app/Models/' . $file_name . '.php';
+            } else {
+                return './app/' . $file_name . '.php';
+            }
+        } elseif ($path == "yml" || $path == "json") {
+            $ext = $path;
+            if ($laravel_major_version >= 8) {
+                return './app/Models/' . $file_name . ".{$ext}";
+            } else {
+                return './app/' . $file_name . ".{$ext}";
+            }
         } elseif ($path == "seed") {
             return './database/seeds/' . $file_name . '.php';
         } elseif ($path == "view-index") {
@@ -64,10 +67,6 @@ trait MakerTrait
             return './resources/views/' . $file_name . '/create.blade.php';
         }
     }
-
-
-
-
 
 
     /**
