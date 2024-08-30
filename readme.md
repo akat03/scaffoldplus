@@ -133,13 +133,16 @@ php artisan migrate
 **routes/web.php**
 
 ```
-Route::get("posts/dl_delete_submit", "PostController@dl_delete_submit")->name("posts.dl_delete_submit"); // multiple delete
-Route::post("posts/sort_exec_ajax", "PostController@sort_exec_ajax")->name("posts.sort_exec_ajax"); // sort exec
-Route::get("posts/sort", "PostController@sort")->name("posts.sort"); // sort view
-Route::delete("posts/destroy_ajax", "PostController@destroy_ajax")->name("posts.destroy_ajax"); // ajax delete
-Route::get("posts/index_ajax", "PostController@index_ajax")->name("posts.index_ajax"); // ajax index
-Route::get("posts/search", "PostController@search")->name("posts.search");
-Route::resource("posts","PostController");
+use App\Http\Controllers\PostController;
+
+Route::get("posts/dl_delete_submit", [PostController::class,'dl_delete_submit'])->name("posts.dl_delete_submit"); // multiple delete
+Route::post("posts/sort_exec_ajax", [PostController::class,'sort_exec_ajax'])->name("posts.sort_exec_ajax"); // sort exec
+Route::get("posts/sort", [PostController::class,'sort'])->name("posts.sort"); // sort view
+Route::delete("posts/destroy_ajax", [PostController::class,'destroy_ajax'])->name("posts.destroy_ajax"); // ajax delete
+Route::get("posts/index_ajax", [PostController::class,'index_ajax'])->name("posts.index_ajax"); // ajax index
+Route::get("posts/search", [PostController::class,'search'])->name("posts.search");
+
+Route::resource("posts", PostController::class);
 ```
 
 
