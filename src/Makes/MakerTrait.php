@@ -56,7 +56,7 @@ trait MakerTrait
                 return './app/' . $file_name . ".{$ext}";
             }
         } elseif ($path == "seed") {
-            return './database/seeds/' . $file_name . '.php';
+            return './database/seeders/' . $file_name . '.php';
         } elseif ($path == "view-index") {
             return './resources/views/' . $file_name . '/index.blade.php';
         } elseif ($path == "view-edit") {

@@ -1,4 +1,4 @@
-# Scaffold CRUD Package for Laravel
+# Scaffold CRUD Package for Laravel11
 
 <img src="https://raw.githubusercontent.com/akat03/scaffoldplus/master/readme-posts-list.png" title="Scaffold , CRUD Package for Laravel">
 
@@ -54,37 +54,6 @@ show some commands like below
   scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
   scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
 ```
-
-
-
-## If you are using Laravel 5.4 
-
-
-### edit config/app.php and add 'providers'
-
-add **‘laravelcollective’**
-
-```
-composer require "laravelcollective/html":"^5.4.0"
-```
-
-add **config/app.php**
-
-```
-    'providers' => [
-        ........
-        Akat03\Scaffoldplus\GeneratorsServiceProvider::class ,   // add this
-        Collective\Html\HtmlServiceProvider::class,     // add this
-    ],
-
-
-   'aliases' => [
-        ........
-        'Form' => Collective\Html\FormFacade::class,     // add this
-        'Html' => Collective\Html\HtmlFacade::class,     // add this
-  ],
-```
-
 
 
 
