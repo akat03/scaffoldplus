@@ -15,7 +15,6 @@ composer require akat03/scaffoldplus
 ```
 
 
-
 ## 2. edit .env file
 
 change database settings in **.env** 
@@ -36,7 +35,6 @@ APP_URL=https://your-server.com
 ```
 
 
-
 ## 3. clear Laravel and Composer cache 
 ```
 php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
@@ -54,7 +52,6 @@ show some commands like below
   scaffoldplus:create   Create Migration, Model, Controller, and YAML(json)
   scaffoldplus:publish  Publish /assets/js/ , /assets/css/ files
 ```
-
 
 
 <br>
