@@ -23,14 +23,19 @@ class MakeModel
         $this->start();
     }
 
+    protected function getModelPath(string $name): string
+    {
+        $option_modelpath = $this->scaffoldCommandObj->option('modelpath');
+        return ($option_modelpath) ? "{$option_modelpath}/{$name}.php" : $this->getPath($name, 'model');
+    }
 
     protected function start()
     {
         $name = $this->scaffoldCommandObj->getObjName('Name');
-        // $modelPath = $this->getPath($name, 'model');
 
         // Make: ./app/[MODEL].php
-        $path = $this->getPath($name, 'model');
+        $path = $this->getModelPath($name, 'model');
+
         $stub = $this->files->get(__DIR__ . '/../Stubs/model.stub');
         $this->replaceName($stub)
             ->replaceModelPath($stub)
@@ -45,7 +50,7 @@ class MakeModel
         }
 
         // Make: ./app/CrudTrait.php
-        $path = $this->getPath('CrudTrait', 'model');
+        $path = $this->getModelPath('CrudTrait', 'model');
         $stub = $this->files->get(__DIR__ . '/../Stubs/CrudTrait.stub');
         $this->replaceName($stub)
             ->replaceSchemaShow($stub);
@@ -63,7 +68,7 @@ class MakeModel
         $crud_ext = ($crud_format == 'yaml') ? 'yml' : 'json';
 
         // $path = './app/' . $this->scaffoldCommandObj->getObjName('Name') . ".{$crud_ext}";
-        $path = $this->getPath($name, $crud_ext);
+        $path = $this->getModelPath($name, $crud_ext);
         $stub = '';
         $json = [];
 

@@ -153,6 +153,7 @@ class ScaffoldMakeCommand extends Command
             ['crud_format', 'c', InputOption::VALUE_OPTIONAL, 'Select CRUD option file from one of the following (json or yaml)', false],
             ['stubs', 'stubs', InputOption::VALUE_OPTIONAL, 'Set the stub directory', false],
             ['addapi', 'addapi', InputOption::VALUE_OPTIONAL, 'Generate API Controller', 'not generate'],
+            ['modelpath', 'modelpath', InputOption::VALUE_OPTIONAL, 'Model file path name default ./App/Models', false],
         ];
     }
 
