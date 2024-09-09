@@ -23,10 +23,14 @@ class MakeModel
         $this->start();
     }
 
-    protected function getModelPath(string $name): string
+    /**
+     * CLIオプションで --model_path がある場合はそのディレクトリを使用したモデルファイルのパスを返す。指定がない場合はLaravelのバージョンごとのデフォルトのパスを返す。
+     */
+    protected function getModelPath(string $name, string $ext = 'php'): string
     {
+
         $option_modelpath = $this->scaffoldCommandObj->option('modelpath');
-        return ($option_modelpath) ? "{$option_modelpath}/{$name}.php" : $this->getPath($name, 'model');
+        return ($option_modelpath) ? "{$option_modelpath}/{$name}.{$ext}" : $this->getPath($name, 'model');
     }
 
     protected function start()
@@ -34,7 +38,7 @@ class MakeModel
         $name = $this->scaffoldCommandObj->getObjName('Name');
 
         // Make: ./app/[MODEL].php
-        $path = $this->getModelPath($name, 'model');
+        $path = $this->getModelPath($name, 'php');
 
         $stub = $this->files->get(__DIR__ . '/../Stubs/model.stub');
         $this->replaceName($stub)
@@ -50,7 +54,7 @@ class MakeModel
         }
 
         // Make: ./app/CrudTrait.php
-        $path = $this->getModelPath('CrudTrait', 'model');
+        $path = $this->getModelPath('CrudTrait', 'php');
         $stub = $this->files->get(__DIR__ . '/../Stubs/CrudTrait.stub');
         $this->replaceName($stub)
             ->replaceSchemaShow($stub);
@@ -62,7 +66,7 @@ class MakeModel
             $this->getSuccessMsg();
         }
 
-        // ========== Make: ./app/[MODEL].json
+        // Make: ./app/[MODEL].json
         $crud_format = $this->scaffoldCommandObj->option('crud_format');
         $crud_format = str_replace('"', '', $crud_format);
         $crud_ext = ($crud_format == 'yaml') ? 'yml' : 'json';
@@ -466,8 +470,14 @@ DOC_END;
      */
     private function replaceModelPath(&$stub)
     {
-        $model_name = \App::getNamespace() . $this->scaffoldCommandObj->getObjName('Name');
-        $stub = str_replace('{{model_path}}', $model_name, $stub);
+        // $model_name = \App::getNamespace() . $this->scaffoldCommandObj->getObjName('Name');
+        // $stub = str_replace('{{model_path}}', $model_name, $stub);
+
+        $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
+        $option_modelpath = $this->scaffoldCommandObj->option('modelpath');
+        $model_path = ($laravel_major_version >= 8 && $option_modelpath == '') ? "App\\Models" : "App";
+        $stub = str_replace('{{model_path}}', $model_path, $stub);
+
         return $this;
     }
 

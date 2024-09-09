@@ -8,7 +8,8 @@ $column_value:{{$column_value}}<br>
 $class:{{$class}}<br>
  --}}
 
-{{ Form::text($column_name, $column_value, ['class' => 'form-control calendar_ui' , 'style' => 'width: 120px;' , 'autocomplete' => 'off' ]) }}
+{{--  {{ Form::text($column_name, $column_value, ['class' => 'form-control calendar_ui' , 'style' => 'width: 120px;' , 'autocomplete' => 'off' ]) }}  --}}
+{{ html()->text($column_name)->class(['form-control','calendar_ui'])->style('width: 120px;')->value($column_value) }}
 
 {{-- <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script> --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
@@ -18,6 +19,9 @@ $class:{{$class}}<br>
 .ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active, a.ui-button:active, .ui-button:active, .ui-button.ui-state-active:hover {
     color: white !important;
     background-color: rgb(0, 127, 255) !important;
+}
+.ui-datepicker {
+    width: 300px;
 }
 </style>
 <script>
@@ -39,12 +43,11 @@ $(function() {
         closeText: '閉じる',
         dateFormat: "yy-mm-dd"
     });
-    // OFF   $(".calendar_ui").focus();
 });
 </script>
 
 
-{{-- z-indexを 1000に --}}
+{{-- z-index 1000 --}}
 <style type="text/css">
     .ui-datepicker { z-index: 1000 !important; }
 </style>

@@ -2,6 +2,7 @@
 
 namespace Akat03\Scaffoldplus\Makes;
 
+use Illuminate\Support\Str;
 use Illuminate\Filesystem\Filesystem;
 use Akat03\Scaffoldplus\Commands\ScaffoldMakeCommand;
 
@@ -41,7 +42,9 @@ trait MakerTrait
         $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
 
         if ($path == "controller") {
-            return './app/Http/Controllers/' . $file_name . '.php';
+            $option_prefix = $this->scaffoldCommandObj->option('prefix');
+            $prefix_path = $option_prefix ? Str::studly($option_prefix) . '/' : ''; // パスカルケースにする
+            return './app/Http/Controllers/' . $prefix_path . $file_name . '.php';
         } elseif ($path == "model") {
             if ($laravel_major_version >= 8) {
                 return './app/Models/' . $file_name . '.php';

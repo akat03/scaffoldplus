@@ -24,11 +24,8 @@ class MakeController
         $this->start();
     }
 
-
     private function start()
     {
-        // Cria o nome do arquivo do controller // TweetController
-
         $name = $this->scaffoldCommandObj->getObjName('Name') . 'Controller';
 
         // Verifica se o arquivo existe com o mesmo o nome
@@ -114,7 +111,10 @@ class MakeController
     private function replaceModelPath(&$stub)
     {
         $laravel_major_version = preg_replace("{([0-9]+)\.([0-9]+)\.([0-9]+)}", "$1", app()->version());
-        $models_dir = ($laravel_major_version >= 8) ? "Models\\" : '';
+
+        $option_modelpath = $this->scaffoldCommandObj->option('modelpath');
+
+        $models_dir = ($laravel_major_version >= 8 && $option_modelpath == '') ? "Models\\" : '';
 
         $model_name = \App::getNamespace() . $models_dir . $this->scaffoldCommandObj->getObjName('Name');
         $stub = str_replace('{{model_path}}', $model_name, $stub);
