@@ -19,7 +19,7 @@ composer require akat03/scaffoldplus
 
 change database settings in **.env** 
 
-```
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -30,18 +30,20 @@ DB_PASSWORD=xxxxxxxxxxxx
 
 change **APP_URL** in **.env** 
 
-```
+```env
 APP_URL=https://your-server.com
 ```
 
 
 ## 3. clear Laravel and Composer cache 
-```
+
+```sh
 php artisan cache:clear; php artisan config:clear; php artisan route:clear; php artisan view:clear; composer dump-autoload
 ```
 
 ## 4. show scaffolding command
-```
+
+```sh
 php artisan
 ```
 
@@ -60,13 +62,22 @@ show some commands like below
 
 
 ## ＊1. Copy /assets/ directory to your public directory
-```
+
+```sh
 php artisan scaffoldplus:publish
 ```
 
-## ＊2. Create Shell Script
+## ＊2. Create lang/ja dir
 
 ```
+composer require askdkc/breezejp --dev
+php artisan breezejp
+```
+
+
+## ＊3. Create Shell Script
+
+```sh
 vi scaffold_posts.sh
 ```
 
@@ -111,25 +122,25 @@ php artisan scaffoldplus:create ${s_controller_name} --extends="layout" --crud_f
 # =========================================== change this
 ```
 
-## ＊3. Execute Shell Script
+## ＊4. Execute Shell Script
 
-```
+```sh
 sh scaffold_posts.sh
 ```
 
 
 
-## ＊4. Execute Migration
+## ＊5. Execute Migration
 
-```
+```sh
 php artisan migrate
 ```
 
-## ＊5. Add Routes
+## ＊6. Add Routes
 
 **routes/web.php**
 
-```
+```php
 use App\Http\Controllers\PostController;
 
 Route::get("posts/dl_delete_submit", [PostController::class,'dl_delete_submit'])->name("posts.dl_delete_submit"); // multiple delete
@@ -143,17 +154,17 @@ Route::resource("posts", PostController::class);
 ```
 
 
-## ＊6. Edit yaml
+## ＊7. Edit yaml
 
 **app/Post.yml**
 
-```
+```sh
 vi app/Post.yml 
 ```
 
 add **view_add_param_php** , **input_css_style** into **sort_no**
 
-```
+```yml
     sort_no:
         name: sort_no
         view_list_title: 'sort number'
@@ -173,7 +184,7 @@ add **view_add_param_php** , **input_css_style** into **sort_no**
 
 change img_file , like below
 
-```
+```yml
     img_file:
         name: img_file
         view_list_title: 'image file'
@@ -194,14 +205,14 @@ change img_file , like below
 ```
 
 
-## ＊7. Create storage link
+## ＊8. Create storage link
 
-```
+```sh
 php artisan storage:link
 ```
 
 
-## ＊8. Access your laravel app
+## ＊9. Access your laravel app
 
 access 
 [http://localhost/posts](http://localhost/posts)

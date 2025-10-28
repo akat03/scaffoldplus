@@ -71,8 +71,10 @@ class MakeModel
         $crud_format = str_replace('"', '', $crud_format);
         $crud_ext = ($crud_format == 'yaml') ? 'yml' : 'json';
 
-        // $path = './app/' . $this->scaffoldCommandObj->getObjName('Name') . ".{$crud_ext}";
-        $path = $this->getModelPath($name, $crud_ext);
+        $fullPath = $this->getModelPath($name, $crud_ext);
+        $pathWithoutExt = pathinfo($fullPath, PATHINFO_DIRNAME) . '/' . pathinfo($fullPath, PATHINFO_FILENAME);
+        $path = $pathWithoutExt . ".{$crud_ext}";
+
         $stub = '';
         $json = [];
 
@@ -137,7 +139,6 @@ class MakeModel
 
 
         foreach ($this->schemaArray as $v) {
-            // dd($v);
             $view_list_title = ucfirst($v['name']);
             if (@$v['options']['comment']) {
                 $view_list_title = $v['options']['comment'];
@@ -242,7 +243,7 @@ class MakeModel
 # ===== ＜SELECT＞ を 直接生成（PHPによる値設定）
 # input_type        : select
 # input_values_php  : |
-#     $values = [ 
+#     $values = [
 #         '' => '選択してください' ,
 #     ];
 #     $dt_start = new \Carbon\Carbon('2009-01-01');
@@ -322,7 +323,7 @@ view_list_tab_group:
 view_column_name_in_show_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_SHOW");
 view_column_name_in_edit_php: env("SCAFFOLD_PLUS_VIEW_COLUMN_NAME_IN_EDIT");
 
-        
+
 
 # ==================== component ====================
 
@@ -389,7 +390,6 @@ DOC_END;
         } elseif ($crud_format == 'json') {
             $stub = json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         }
-
 
         if ($this->files->exists($path)) {
             // if ($this->scaffoldCommandObj->confirm($path . ' already exists! Do you wish to overwrite? [yes|no]')) {

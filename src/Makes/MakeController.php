@@ -28,12 +28,10 @@ class MakeController
     {
         $name = $this->scaffoldCommandObj->getObjName('Name') . 'Controller';
 
-        // Verifica se o arquivo existe com o mesmo o nome
         if ($this->files->exists($path = $this->getPath($name))) {
             return $this->scaffoldCommandObj->error($name . ' already exists!');
         }
 
-        // Cria a pasta caso nao exista
         $this->makeDirectory($path);
 
         // Save Controller
@@ -53,7 +51,11 @@ class MakeController
         // }
 
         $lang_base_path = \Akat03\Scaffoldplus\libs\ScaffoldplusLib::getLangDir();
-        $lang_path_ja = $lang_base_path . 'ja/excrud.php';
+        if (!is_dir($lang_base_path)) {
+            mkdir($lang_base_path);
+        }
+
+        $lang_path_ja = $lang_base_path . '/ja/excrud.php';
         if (!is_file($lang_path_ja)) {
             if (!is_dir(dirname($lang_path_ja))) {
                 $this->scaffoldCommandObj->info('Create Directory ' . dirname($lang_path_ja));
