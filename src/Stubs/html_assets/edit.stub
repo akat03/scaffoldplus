@@ -220,18 +220,18 @@
                     {{-- ＊ <input type="text"> --}}
                     @if ( strcmp($v->input_type, 'text') == 0 )
                         {{-- Form::text($k, $_form_value, ['class' => $class_name, 'style' => @$v->input_css_style]) --}}
-                        {{ html()->text($k)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                        {{ html()->text($k)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
 
 
                     {{-- ＊ <input type="tel"> --}}
                     @elseif ( strcmp($v->input_type, 'tel') == 0 )
                         {{-- Form::tel($k, $_form_value, ['class' => $class_name, 'style' => @$v->input_css_style]) --}}
-                        {{ html()->tel($k)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                        {{ html()->tel($k)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
 
                     {{-- ＊ <textarea> --}}
                     @elseif ( strcmp($v->input_type, 'textarea') == 0 )
                         {{-- Form::textarea($k, $_form_value, ['rows' => 3, 'class' => $class_name, 'style' => @$v->input_css_style]) --}}
-                        {{ html()->textarea($k)->rows(3)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                        {{ html()->textarea($k)->rows(3)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
 
                     {{-- ＊ <select> --}}
                     @elseif ( strcmp($v->input_type, 'select') == 0 )
@@ -255,13 +255,13 @@
 
                         {{-- 直接 <select> を生成 --}}
                         @elseif ( @$v->input_values_array )
-                          {{ html()->select($k,$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                          {{ html()->select($k,$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
                         @elseif ( @$v->input_values_php )
                             @php
                                 $v->input_values_array = eval($v->input_values_php);
                             @endphp
                             {{-- Form::select($k, @$v->input_values_array, $_form_value, ['class' => @$v->input_css_class, 'style' => @$v->input_css_style]) --}}
-                            {{ html()->select($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                            {{ html()->select($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
                         {{-- / 直接 <select> を生成 --}}
                         @else
                             please set 'input_values_model', 'input_values_model__id_column', 'input_values_model__name_column' in  yaml file.
@@ -283,12 +283,12 @@
                     {{-- ＊ <input type="radio"> --}}
                     @elseif ( strcmp($v->input_type, 'radio') == 0 )
                         {{-- Form::radio($k, $_form_value, ['class' => $class_name]) --}}
-                        {{ html()->radio($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                        {{ html()->radio($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
 
                     {{-- ＊ <input type="file"> --}}
                     @elseif ( strcmp($v->input_type, 'file') == 0 )
                         {{-- Form::file($k.'__attach' , ['class' => 'block']) --}}
-                        {{ html()->file($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value($_form_value) }}
+                        {{ html()->file($k, @$v->input_values_array)->class([$class_name])->style(@$v->input_css_style)->value(old($k, $_form_value)) }}
 
                         {{-- attach file name preview --}}
                         @php
